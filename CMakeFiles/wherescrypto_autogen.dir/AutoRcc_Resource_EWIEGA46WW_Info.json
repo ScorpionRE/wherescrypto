@@ -1,0 +1,27 @@
+{
+	"BUILD_DIR" : "D:/study/whres7.5/src/wherescrypto_autogen",
+	"CMAKE_BINARY_DIR" : "D:/study/whres7.5/src",
+	"CMAKE_CURRENT_BINARY_DIR" : "D:/study/whres7.5/src",
+	"CMAKE_CURRENT_SOURCE_DIR" : "D:/study/whres7.5/src",
+	"CMAKE_SOURCE_DIR" : "D:/study/whres7.5/src",
+	"INCLUDE_DIR" : "D:/study/whres7.5/src/wherescrypto_autogen/include",
+	"INCLUDE_DIR_Debug" : "D:/study/whres7.5/src/wherescrypto_autogen/include_Debug",
+	"INCLUDE_DIR_Release" : "D:/study/whres7.5/src/wherescrypto_autogen/include_Release",
+	"INPUTS" : 
+	[
+		"D:/study/whres7.5/src/images/function.png",
+		"D:/study/whres7.5/src/images/wherescrypto.png"
+	],
+	"LOCK_FILE" : "D:/study/whres7.5/src/CMakeFiles/wherescrypto_autogen.dir/AutoRcc_Resource_EWIEGA46WW_Lock.lock",
+	"MULTI_CONFIG" : true,
+	"OPTIONS" : [ "-name", "Resource" ],
+	"OUTPUT_CHECKSUM" : "EWIEGA46WW",
+	"OUTPUT_NAME" : "qrc_Resource.cpp",
+	"RCC_EXECUTABLE" : "D:/software/qt/5.6.3/msvc2015_64/bin/rcc.exe",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "D:/study/whres7.5/src/CMakeFiles/wherescrypto_autogen.dir/AutoRcc_Resource_EWIEGA46WW_Used.txt",
+	"SETTINGS_FILE_Debug" : "D:/study/whres7.5/src/CMakeFiles/wherescrypto_autogen.dir/AutoRcc_Resource_EWIEGA46WW_Used_Debug.txt",
+	"SETTINGS_FILE_Release" : "D:/study/whres7.5/src/CMakeFiles/wherescrypto_autogen.dir/AutoRcc_Resource_EWIEGA46WW_Used_Release.txt",
+	"SOURCE" : "D:/study/whres7.5/src/Resource.qrc",
+	"VERBOSITY" : 0
+}
