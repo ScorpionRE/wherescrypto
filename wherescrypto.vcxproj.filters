@@ -58,9 +58,6 @@
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\EWIEGA46WW\qrc_Resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Microcode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D:\study\whres7.5\src\AnalysisResult.hpp">
@@ -124,12 +121,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\study\whres7.5\src\types.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Microcode.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="F:\IDA_Pro_v7.5_Portable\plugins\hexrays_sdk\include\hexrays.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
