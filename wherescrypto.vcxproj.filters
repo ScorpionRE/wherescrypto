@@ -129,6 +129,9 @@
     <ClInclude Include="Microcode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="F:\IDA_Pro_v7.5_Portable\plugins\hexrays_sdk\include\hexrays.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="D:\study\whres7.5\src\CMakeFiles\3cb88bcb72d18b69fa76fffaf155d975\qrc_Resource.cpp.rule">

@@ -936,13 +936,13 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 			goto _analysis_error;
 		}
 		unsigned long lpNextAddress;
-		lpCurrentAddress = lpAddress;
 		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpAddress);
 		if (eStatus == PROCESSOR_STATUS_OK) {
 			lpAddress = lpNextAddress;
 			continue;
 		}
 		break;
+
 	}
 
 	wc_debug("[*] size of graph : %llu\n", oGraph->size());

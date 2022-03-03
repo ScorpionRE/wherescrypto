@@ -35,6 +35,7 @@ public:
 	int dwMaxCallDepth;
 
 	void initialize(CodeBroker& oBuilder);
+	bool genMicrocode();
 	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress);
 	bool ShouldClean(DFGNode& oNode);
 

@@ -51,7 +51,7 @@ public:
 	void initialize(CodeBroker &oBuilder);
 	processor_status_t instruction(CodeBroker &oBuilder, unsigned long *lpNextAddress, unsigned long lpAddress);
 	bool ShouldClean(DFGNode &oNode);
-
+	
 protected:
 	virtual Processor Migrate(DFGraph oGraph);
 

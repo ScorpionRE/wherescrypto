@@ -3,6 +3,7 @@
 #include <idp.hpp>
 #include <allins.hpp>
 #include <segregs.hpp>
+#include <hexrays.hpp>
 
 #include "common.hpp"
 #include "Microcode.hpp"
@@ -50,9 +51,19 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 }
 
 
-//gen_microcode
+//gen_microcode  function_list
+bool MicrocodeImpl::genMicrocode() {
+	mbr = ida_hexrays.mba_ranges_t();
+	fn = idaapi.get_func(ea);
+	eea = fn.endEA;
+	sea = fn.startEA;
+	mbr.ranges.push_back(ida_range.range_t(sea, eea);
+
+
+}
+
 processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress) {
-	
+	ida_hex.gen
 }
 
 
