@@ -7,6 +7,9 @@
     <ClCompile Include="D:\study\whres7.5\src\Arm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\study\whres7.5\src\hexrays_Microcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="D:\study\whres7.5\src\Backlog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,6 +67,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\study\whres7.5\src\Arm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\study\whres7.5\src\hexrays_Microcode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\study\whres7.5\src\Backlog.hpp">

@@ -5,6 +5,8 @@
 
 #include "types.hpp"
 #include "Processor.hpp"
+#include "hexrays.hpp"
+
 
 typedef enum {
 	FLAG_OP_UNSET = 0,

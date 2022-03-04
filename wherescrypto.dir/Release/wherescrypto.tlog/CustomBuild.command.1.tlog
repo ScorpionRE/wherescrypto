@@ -1,0 +1,26 @@
+^D:\STUDY\WHRES7.5\SRC\CMAKEFILES\3CB88BCB72D18B69FA76FFFAF155D975\QRC_RESOURCE.CPP.RULE
+setlocal
+cd D:\study\whres7.5\src
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_autorcc D:/study/whres7.5/src/CMakeFiles/wherescrypto_autogen.dir/AutoRcc_Resource_EWIEGA46WW_Info.json Release
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_autorcc D:/study/whres7.5/src/CMakeFiles/wherescrypto_autogen.dir/AutoRcc_Resource_EWIEGA46WW_Info.json Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\STUDY\WHRES7.5\SRC\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/study/whres7.5/src -BD:/study/whres7.5/src --check-stamp-file D:/study/whres7.5/src/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

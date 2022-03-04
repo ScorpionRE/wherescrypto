@@ -6,7 +6,7 @@
 #include <hexrays.hpp>
 
 #include "common.hpp"
-#include "Microcode.hpp"
+#include "hexrays_Microcode.hpp"
 #include "DFGraph.hpp"
 #include "Broker.hpp"
 #include "Condition.hpp"
@@ -53,9 +53,12 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 
 //gen_microcode  function_list
 bool MicrocodeImpl::genMicrocode() {
-	
-	//gen_microcode();
-
+	hexrays_failure_t hf;
+	func_t* pfn = get_func(get_screen_ea());
+	mba_t *mba = gen_microcode(pfn,&hf,NULL,DECOMP_WARNINGS);
+	vd_printer_t vp;
+	mba->print(vp);
+	delete mba;
 }
 
 processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress) {

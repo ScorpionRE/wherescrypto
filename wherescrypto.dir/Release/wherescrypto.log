@@ -1,0 +1,48 @@
+﻿  Automatic MOC for target wherescrypto
+  Automatic RCC for Resource.qrc
+  Building Custom Rule D:/study/whres7.5/src/CMakeLists.txt
+  mocs_compilation.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  Arm.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  hexrays_Microcode.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+D:\study\whres7.5\src\ReferenceCount.hpp(41,1): error C2661: “flag_op_t::flag_op_t”: 没有重载函数接受 3 个参数
+D:\study\whres7.5\src\hexrays_Microcode.hpp(54): message : 查看对正在编译的函数 模板 实例化“rfc_ptr<flag_op_t> rfc_ptr<flag_op_t>::create<DFGNode&,DFGNode&,flag_op_type_t&>(DFGNode &,DFGNode &,flag_op_type_t &)”的引用
+D:\study\whres7.5\src\hexrays_Microcode.hpp(54): message : 查看对正在编译的函数 模板 实例化“rfc_ptr<flag_op_t> rfc_ptr<flag_op_t>::create<DFGNode&,DFGNode&,flag_op_type_t&>(DFGNode &,DFGNode &,flag_op_type_t &)”的引用
+  Backlog.cpp
+  BlockPermutationEvaluator.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  Broker.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+D:\study\whres7.5\src\Broker.cpp(787,93): warning C4312: “类型强制转换”: 从“unsigned long”转换到更大的“void *”
+D:\study\whres7.5\src\Broker.cpp(789,66): warning C4312: “类型强制转换”: 从“unsigned long”转换到更大的“void *”
+D:\study\whres7.5\src\Broker.cpp(874,69): warning C4312: “类型强制转换”: 从“unsigned long”转换到更大的“void *”
+  Condition.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  ControlDialog.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+D:\study\whres7.5\src\ReferenceCount.hpp(54,1): error C2027: 使用了未定义类型“MicrocodeImpl”
+D:\study\whres7.5\src\types.hpp(8): message : 参见“MicrocodeImpl”的声明
+D:\study\whres7.5\src\ReferenceCount.hpp(54): message : 在编译 类 模板 成员函数“rfc_ptr<MicrocodeImpl>::~rfc_ptr(void)”时
+D:\study\whres7.5\src\ControlDialog.cpp(136): message : 查看对正在编译的函数 模板 实例化“rfc_ptr<MicrocodeImpl>::~rfc_ptr(void)”的引用
+D:\study\whres7.5\src\ControlDialog.cpp(136): message : 查看对正在编译的 类 模板 实例化“rfc_ptr<MicrocodeImpl>”的引用
+  DFGDisplay.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  DFGNode.cpp
+  DFGraph.cpp
+  FunctionList.cpp
+  PathOracle.cpp
+  Plugin.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  Predicate.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  SignatureEvaluator.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  SignatureParser.cpp
+D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+  SlidingStackedWidget.cpp
+  ThreadPool.cpp
+  qrc_Resource.cpp
+  正在生成代码...
+D:\study\whres7.5\src\Arm.cpp(1045): warning C4715: “flag_op_t::ConditionalInstruction”: 不是所有的控件路径都返回值

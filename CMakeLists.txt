@@ -40,6 +40,7 @@ find_package(Qt5 COMPONENTS Widgets Core Gui REQUIRED)
 set(SOURCES
 	AnalysisResult.hpp
 	Arm.hpp
+	hexrays_Microcode.hpp
 	Backlog.hpp
 	BlockPermutationEvaluator.hpp
 	Broker.hpp
@@ -60,6 +61,7 @@ set(SOURCES
 	ThreadPool.hpp
 	types.hpp
 	Arm.cpp
+	hexrays_Microcode.cpp
 	Backlog.cpp
 	BlockPermutationEvaluator.cpp
 	Broker.cpp

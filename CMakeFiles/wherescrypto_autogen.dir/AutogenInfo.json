@@ -97,6 +97,11 @@
 			"EWIEGA46WW/moc_ThreadPool.cpp"
 		],
 		[ "D:/study/whres7.5/src/common.hpp", "Mu", "EWIEGA46WW/moc_common.cpp" ],
+		[
+			"D:/study/whres7.5/src/hexrays_Microcode.hpp",
+			"Mu",
+			"EWIEGA46WW/moc_hexrays_Microcode.cpp"
+		],
 		[ "D:/study/whres7.5/src/types.hpp", "Mu", "EWIEGA46WW/moc_types.cpp" ]
 	],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
@@ -164,7 +169,8 @@
 		[ "D:/study/whres7.5/src/SignatureEvaluator.cpp", "Mu" ],
 		[ "D:/study/whres7.5/src/SignatureParser.cpp", "Mu" ],
 		[ "D:/study/whres7.5/src/SlidingStackedWidget.cpp", "Mu" ],
-		[ "D:/study/whres7.5/src/ThreadPool.cpp", "Mu" ]
+		[ "D:/study/whres7.5/src/ThreadPool.cpp", "Mu" ],
+		[ "D:/study/whres7.5/src/hexrays_Microcode.cpp", "Mu" ]
 	],
 	"VERBOSITY" : 0
 }

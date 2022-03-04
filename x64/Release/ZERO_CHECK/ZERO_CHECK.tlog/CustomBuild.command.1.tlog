@@ -1,0 +1,10 @@
+^D:\STUDY\WHRES7.5\SRC\CMAKEFILES\B8DF0E057978F9590EF06BC8920857F5\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/study/whres7.5/src -BD:/study/whres7.5/src --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/study/whres7.5/src/wherescrypto.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
