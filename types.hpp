@@ -51,7 +51,7 @@ typedef rfc_ptr<AbstractEvaluationResultImpl> AbstractEvaluationResult;
 typedef rfc_ptr<AbstractEvaluatorImpl> AbstractEvaluator;
 typedef rfc_ptr<AnalysisResultImpl> AnalysisResult;
 typedef rfc_ptr<ArmImpl> Arm;
-typedef rfc_ptr<MicrocodeImpl>Microcode;
+typedef rfc_ptr<MicrocodeImpl> Microcode;
 typedef rfc_ptr<AssignmentMapImpl> AssignmentMap;
 typedef rfc_ptr<BacklogDbImpl> BacklogDb;
 typedef rfc_ptr<BacklogImpl> Backlog;

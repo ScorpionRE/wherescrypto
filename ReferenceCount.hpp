@@ -3,6 +3,7 @@
 #include <atomic>
 #include <unordered_map>
 
+
 /*
  * We implement our own reference counting rather than relying on std::shared_ptr,
  * since we prefer to have the control block contained within the object itself
@@ -51,7 +52,7 @@ public:
 		lpOutput->ref();
 		return lpOutput;
 	}
-	inline ~rfc_ptr() { if (lpNode) { lpNode->unref(); } }
+	inline ~rfc_ptr<T>() { if (lpNode) { lpNode->unref(); } }
 
 	inline rfc_ptr<T>& operator=(const rfc_ptr<T>& lpOther) {
 		if (lpNode != lpOther.lpNode) {

@@ -116,8 +116,8 @@ _all_results_set:
 bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 	std::list<unsigned long>::iterator itF = aFunctionList.begin();
 	if (itF != aFunctionList.end()) {
-		//Processor oProcessor(Processor::typecast(Arm::create()));
-		Processor oProcessor(Processor::typecast(Arm::create()));
+		// Processor oProcessor(Processor::typecast(Arm::create()));
+		Processor oProcessor(Processor::typecast(Microcode::create()));
 		bool bScheduled = CodeBrokerImpl::ScheduleBuild(oProcessor, oPool, *itF, nullptr, true);
 		if (bScheduled) {
 			aFunctionList.erase(itF);
@@ -130,6 +130,7 @@ bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 }
 
 //如何进入run了ScheduleNextFunction？？？
+/*
 bool CoordinatorThread::ScheduleNextFunctionMicrocode(ThreadPool& oPool) {
 	std::list<unsigned long>::iterator itF = aFunctionList.begin();
 	if (itF != aFunctionList.end()) {
@@ -144,6 +145,7 @@ bool CoordinatorThread::ScheduleNextFunctionMicrocode(ThreadPool& oPool) {
 	return false;
 
 }
+*/
 
 void ControlDialog::SetupFunctionSelector() {
 	lpFunctionList = new FunctionList();

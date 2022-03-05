@@ -10,6 +10,7 @@
 #include "Broker.hpp"
 #include "Condition.hpp"
 
+
 typedef enum {
 	LSL,          // logical left         LSL #0 - don't shift
 	LSR,          // logical right        LSR #0 means LSR #32
@@ -59,7 +60,7 @@ typedef enum {
 #define aux_wide        0x8000  // thumb32 instruction (.W suffix)
 #define aux_pac        0x10000  // Pointer Authentication Code instruction (see PAC_ flags)
 
-void ArmImpl::initialize(CodeBroker &oBuilder) {
+void ArmImpl::initialize(CodeBroker& oBuilder) {
 	unsigned int i;
 	aRegisters.reserve(16);
 
@@ -70,14 +71,14 @@ void ArmImpl::initialize(CodeBroker &oBuilder) {
 	dwMaxCallDepth = oBuilder->MaxCallDepth();
 }
 
-processor_status_t ArmImpl::JumpToNode(CodeBroker &oBuilder, unsigned long *lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress) {
+processor_status_t ArmImpl::JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress) {
 	unsigned long lpTarget(0);
 
 	if (NODE_IS_CONSTANT(oAddress)) {
 		lpTarget = oAddress->toConstant()->dwValue & ~1;
-_jump:
+	_jump:
 		API_LOCK();
-		segment_t *lpSegment = getseg(lpTarget);
+		segment_t* lpSegment = getseg(lpTarget);
 		qstring szSegmentName;
 		get_segm_name(&szSegmentName, lpSegment);
 		API_UNLOCK();
@@ -92,20 +93,21 @@ _jump:
 			 * when a call is found. Thus, jumps should pass just fine
 			 */
 			*lpNextAddress = lpTarget;
-		} else {
+		}
+		else {
 			DFGNode oCallNode = oBuilder->NewCall(lpTarget, GetRegister(oBuilder, lpInstructionAddress, 0));
 			/*
 			 * We're adding a CALL node, check if that function is set to return
 			 * analysis stops here if it doesn't
 			 */
 			API_LOCK();
-			func_t *lpFunction = get_func(lpTarget);
+			func_t* lpFunction = get_func(lpTarget);
 			bool bFunctionReturns = true;
 			if (
 				lpFunction != NULL &&
-				(lpFunction->start_ea & ~1) == (lpTarget & ~1) && 
+				(lpFunction->start_ea & ~1) == (lpTarget & ~1) &&
 				!func_does_return(lpTarget & ~1)
-			) {
+				) {
 				bFunctionReturns = false;
 			}
 			API_UNLOCK();
@@ -123,13 +125,15 @@ _jump:
 
 			if (NODE_IS_REGISTER(oLr)) {
 				goto _load_lr;
-			} else {
+			}
+			else {
 				*lpNextAddress = oLr->toConstant()->dwValue & ~1;
 				PopCallStack(*lpNextAddress);
 			}
 		}
 		return PROCESSOR_STATUS_OK;
-	} else if (NODE_IS_LOAD(oAddress)) {
+	}
+	else if (NODE_IS_LOAD(oAddress)) {
 		DFGNode oLoadAddress = *oAddress->toLoad()->aInputNodes.begin();
 		if (NODE_IS_CONSTANT(oLoadAddress)) {
 			API_LOCK();
@@ -139,7 +143,7 @@ _jump:
 		}
 	}
 	if (NODE_IS_REGISTER(oAddress) && oAddress->toRegister()->bRegister == 14) {
-_load_lr:
+	_load_lr:
 		wc_debug("[+] loading %s into PC @ 0x%x\n", oAddress->expression(2).c_str(), lpInstructionAddress);
 		if (aCallStack.size() > 0) {
 			wc_debug("[-] call stack not empty :(\n");
@@ -152,7 +156,8 @@ _load_lr:
 			//return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
 		return PROCESSOR_STATUS_DONE;
-	} else {
+	}
+	else {
 		wc_debug("[-] loading of non-constant expression %s into PC is not supported @ 0x%x\n", oAddress->expression(2).c_str(), lpInstructionAddress);
 		return PROCESSOR_STATUS_INTERNAL_ERROR;
 	}
@@ -177,12 +182,12 @@ void ArmImpl::PopCallStack(unsigned long lpAddress) {
 	}
 }
 
-DFGNode ArmImpl::GetRegister(CodeBroker &oBuilder, unsigned long lpInstructionAddress, unsigned char bReg) {
+DFGNode ArmImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned char bReg) {
 	if (bReg == 15) {
 		API_LOCK();
 		sel_t t = get_sreg(lpInstructionAddress, 20);
 		API_UNLOCK();
-		if((t != BADSEL && t != 0)) { /* instruction is thumb */
+		if ((t != BADSEL && t != 0)) { /* instruction is thumb */
 			return oBuilder->NewConstant(lpInstructionAddress + 4);
 		}
 		/* plain ARM */
@@ -191,7 +196,7 @@ DFGNode ArmImpl::GetRegister(CodeBroker &oBuilder, unsigned long lpInstructionAd
 	return aRegisters[bReg];
 }
 
-processor_status_t ArmImpl::SetRegister(CodeBroker & oBuilder, unsigned long lpInstructionAddress, unsigned long *lpNextAddress, unsigned char bReg, DFGNode & oNode) {
+processor_status_t ArmImpl::SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, unsigned char bReg, DFGNode& oNode) {
 	if (bReg == 15) {
 		return JumpToNode(oBuilder, lpNextAddress, lpInstructionAddress, oNode);
 	}
@@ -200,7 +205,7 @@ processor_status_t ArmImpl::SetRegister(CodeBroker & oBuilder, unsigned long lpI
 }
 
 
-DFGNode ArmImpl::GetOperandShift(CodeBroker & oBuilder, DFGNode & oBaseNode, DFGNode & oShift, char bShiftType, bool bSetFlags) {
+DFGNode ArmImpl::GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, char bShiftType, bool bSetFlags) {
 	switch (bShiftType) {
 	case LSL:
 		break;
@@ -228,12 +233,13 @@ DFGNode ArmImpl::GetOperandShift(CodeBroker & oBuilder, DFGNode & oBaseNode, DFG
 	}
 	if (bShiftType == ROR) {
 		return oBuilder->NewRotate(oBaseNode, oShift);
-	} else {
+	}
+	else {
 		return oBuilder->NewShift(oBaseNode, oShift);
 	}
 }
 
-DFGNode ArmImpl::GetOperand(CodeBroker &oBuilder, const op_t &stOperand, unsigned long lpInstructionAddress, bool bSetFlags) {
+DFGNode ArmImpl::GetOperand(CodeBroker& oBuilder, const op_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags) {
 	switch (stOperand.type) {
 	case o_reg: {
 		DFGNode oReg = GetRegister(oBuilder, lpInstructionAddress, stOperand.reg);
@@ -258,7 +264,8 @@ DFGNode ArmImpl::GetOperand(CodeBroker &oBuilder, const op_t &stOperand, unsigne
 				SetFlag(FLAG_OP_ADD, oReg1, oReg2);
 			}
 			return oBuilder->NewAdd(oReg1, oReg2);
-		} else {
+		}
+		else {
 			DFGNode oShiftAmount = oBuilder->NewConstant(dwShiftAmount);
 			DFGNode oResult = GetOperandShift(oBuilder, oReg2, oShiftAmount, stOperand.specflag2, bSetFlags);
 			return oBuilder->NewAdd(oReg1, oResult);
@@ -276,7 +283,8 @@ DFGNode ArmImpl::GetOperand(CodeBroker &oBuilder, const op_t &stOperand, unsigne
 		DFGNode oBaseNode = GetRegister(oBuilder, lpInstructionAddress, stOperand.reg);
 		if (stOperand.value == 0 && stOperand.specflag2 != 0) {
 			oShift = GetRegister(oBuilder, lpInstructionAddress, stOperand.specflag1);
-		} else {
+		}
+		else {
 			oShift = oBuilder->NewConstant(stOperand.value);
 		}
 		return GetOperandShift(oBuilder, oBaseNode, oShift, stOperand.specflag2, bSetFlags);
@@ -289,7 +297,7 @@ DFGNode ArmImpl::GetOperand(CodeBroker &oBuilder, const op_t &stOperand, unsigne
 	}
 }
 
-processor_status_t ArmImpl::instruction(CodeBroker &oBuilder, unsigned long *lpNextAddress, unsigned long lpAddress) {
+processor_status_t ArmImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress) {
 	insn_t stInstruction;
 	unsigned int i;
 	unsigned int dwRegisterNo;
@@ -314,8 +322,9 @@ processor_status_t ArmImpl::instruction(CodeBroker &oBuilder, unsigned long *lpN
 	case cNE:          // 0001 !Z                       Not equal
 		if (oZeroFlag != nullptr) {
 			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
-_missing_flags:
+		}
+		else {
+		_missing_flags:
 			wc_debug("[-] conditional instruction but flags are not set @ 0x%x\n", lpAddress);
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
@@ -324,7 +333,8 @@ _missing_flags:
 	case cCC:          // 0011 !C                       Unsigned lower
 		if (oCarryFlag != nullptr) {
 			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
+		}
+		else {
 			goto _missing_flags;
 		}
 		break;
@@ -332,7 +342,8 @@ _missing_flags:
 	case cPL:          // 0101 !N                       Positive or Zero
 		if (oNegativeFlag != nullptr) {
 			oCondition = oNegativeFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
+		}
+		else {
 			goto _missing_flags;
 		}
 		break;
@@ -340,7 +351,8 @@ _missing_flags:
 	case cVC:          // 0111 !V                       No overflow
 		if (oOverflowFlag != nullptr) {
 			oCondition = oOverflowFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
+		}
+		else {
 			goto _missing_flags;
 		}
 		break;
@@ -348,16 +360,17 @@ _missing_flags:
 	case cLS:          // 1001 !C | Z                   Unsigned lower or same
 		if (oCarryFlag != nullptr && oZeroFlag != nullptr) {
 			if (oCarryFlag != oZeroFlag) {
-_flags_from_different_operations:
+			_flags_from_different_operations:
 				wc_debug("[-] flags used in conditional instruction originate from two different operations which is not supported @ 0x%x\n", lpAddress);
 				return PROCESSOR_STATUS_INTERNAL_ERROR;
 			}
 			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
+		}
+		else {
 			goto _missing_flags;
 		}
 		break;
-		
+
 	case cGE:          // 1010 (N & V) | (!N & !V)      Greater or equal
 	case cLT:          // 1011 (N & !V) | (!N & V)      Less than
 		if (oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
@@ -365,7 +378,8 @@ _flags_from_different_operations:
 				goto _flags_from_different_operations;
 			}
 			oCondition = oNegativeFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
+		}
+		else {
 			goto _missing_flags;
 		}
 		break;
@@ -377,11 +391,12 @@ _flags_from_different_operations:
 				goto _flags_from_different_operations;
 			}
 			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, stInstruction.segpref);
-		} else {
+		}
+		else {
 			goto _missing_flags;
 		}
 		break;
-		
+
 	case cAL:          // 1110 Always
 		goto _always;
 	case cNV:
@@ -394,14 +409,14 @@ _flags_from_different_operations:
 	if (oCondition->eSpecial == SPECIAL_COND_NORMAL && ((
 		NODE_IS_REGISTER(oCondition->oExpression1) &&
 		oCondition->oExpression1->toRegister()->bRegister == 13 // SP
-	) || (
-		NODE_IS_ADD(oCondition->oExpression1) && oCondition->oExpression1->aInputNodes.size() == 2 &&
-		NODE_IS_REGISTER(*oCondition->oExpression1->aInputNodes.begin()) &&
-		(*oCondition->oExpression1->aInputNodes.begin())->toRegister()->bRegister == 13 && // SP+CONST:x
-		NODE_IS_CONSTANT(*++oCondition->oExpression1->aInputNodes.begin())
-	)) && (
-		NODE_IS_CONSTANT(oCondition->oExpression2)
-	)) {
+		) || (
+			NODE_IS_ADD(oCondition->oExpression1) && oCondition->oExpression1->aInputNodes.size() == 2 &&
+			NODE_IS_REGISTER(*oCondition->oExpression1->aInputNodes.begin()) &&
+			(*oCondition->oExpression1->aInputNodes.begin())->toRegister()->bRegister == 13 && // SP+CONST:x
+			NODE_IS_CONSTANT(*++oCondition->oExpression1->aInputNodes.begin())
+			)) && (
+				NODE_IS_CONSTANT(oCondition->oExpression2)
+				)) {
 		switch (oCondition->eOperator) {
 		case OPERATOR_UGE:
 			if (
@@ -416,7 +431,8 @@ _flags_from_different_operations:
 				wc_debug("[*] carry (un)set : %s, following %s @ 0x%x\n", oCondition->expression(2).c_str(), oCondition->oExpression2->toConstant()->dwValue == 0 ? "true" : "false", lpAddress);
 				if (oCondition->oExpression2->toConstant()->dwValue == 0) {
 					goto _always;
-				} else {
+				}
+				else {
 					goto _skip;
 				}
 			}
@@ -429,10 +445,11 @@ _flags_from_different_operations:
 				 * the caller passes a pointer to the stack as a parameter, and the callee checks whether that parameter is NULL.
 				 * we don't want to fork based on SP+x == 0 vs SP+x != 0, but simply take the latter path instead.
 				 */
-				//wc_debug("[*] parameter NULL check : %s, following %s @ 0x%x\n", oCondition->expression(4).c_str(), oCondition->eOperator == OPERATOR_NEQ ? "true" : "false", lpAddress);
+				 //wc_debug("[*] parameter NULL check : %s, following %s @ 0x%x\n", oCondition->expression(4).c_str(), oCondition->eOperator == OPERATOR_NEQ ? "true" : "false", lpAddress);
 				if (oCondition->eOperator == OPERATOR_EQ) {
 					goto _skip;
-				} else {
+				}
+				else {
 					goto _always;
 				}
 			}
@@ -443,7 +460,8 @@ _flags_from_different_operations:
 	eVerdict = oBuilder->IntroduceCondition(oCondition, lpAddress + dwInstructionSize);
 	if (eVerdict == GRAPH_PROCESS_SKIP) {
 		goto _skip;
-	} else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
+	}
+	else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
 		return PROCESSOR_STATUS_INTERNAL_ERROR;
 	}
 
@@ -463,17 +481,20 @@ _always:
 				if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, stInstruction.ops[1].reg, oReg)) != PROCESSOR_STATUS_OK) {
 					return eStatus;
 				}
-			} else if (stInstruction.auxpref & aux_postidx) { // post-indexed
+			}
+			else if (stInstruction.auxpref & aux_postidx) { // post-indexed
 				oLoad = oBuilder->NewLoad(oReg);
 				oReg = oBuilder->NewAdd(oReg, oBuilder->NewConstant(stInstruction.ops[1].addr));
 				if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, stInstruction.ops[1].reg, oReg)) != PROCESSOR_STATUS_OK) {
 					return eStatus;
 				}
-			} else {
+			}
+			else {
 				oReg = oBuilder->NewAdd(oReg, oBuilder->NewConstant(stInstruction.ops[1].addr));
 				oLoad = oBuilder->NewLoad(oReg);
 			}
-		} else {
+		}
+		else {
 			oLoad = oBuilder->NewLoad(GetOperand(oBuilder, stInstruction.ops[1], lpAddress, false));
 		}
 
@@ -498,17 +519,20 @@ _always:
 				if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, stInstruction.ops[1].reg, oReg)) != PROCESSOR_STATUS_OK) {
 					return eStatus;
 				}
-			} else if (stInstruction.auxpref & aux_postidx) { // post-indexed
+			}
+			else if (stInstruction.auxpref & aux_postidx) { // post-indexed
 				oBuilder->NewStore(oData, oReg);
 				oReg = oBuilder->NewAdd(oReg, oBuilder->NewConstant(stInstruction.ops[1].addr));
 				if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, stInstruction.ops[1].reg, oReg)) != PROCESSOR_STATUS_OK) {
 					return eStatus;
 				}
-			} else {
+			}
+			else {
 				oReg = oBuilder->NewAdd(oReg, oBuilder->NewConstant(stInstruction.ops[1].addr));
 				oBuilder->NewStore(oData, oReg);
 			}
-		} else {
+		}
+		else {
 			oBuilder->NewStore(oData, GetOperand(oBuilder, stInstruction.ops[1], lpAddress, false));
 		}
 		break;
@@ -642,7 +666,8 @@ _always:
 		processor_status_t eStatus;
 		if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNoA, oLoadA)) != PROCESSOR_STATUS_OK) {
 			return eStatus;
-		} else if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNoB, oLoadB)) != PROCESSOR_STATUS_OK) {
+		}
+		else if ((eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNoB, oLoadB)) != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
 		break;
@@ -671,7 +696,8 @@ _always:
 			bPost = false;
 			bIncrement = false;
 			bWriteback = true;
-		} else {
+		}
+		else {
 			dwRegisterNo = stInstruction.ops[0].reg;
 			dwSpec = stInstruction.ops[1].specval;
 			bPost = !!(stInstruction.auxpref & aux_postidx);
@@ -685,7 +711,7 @@ _always:
 			i = bIncrement ? 0 : 15;
 			(i < 16) && (i >= 0);
 			bIncrement ? i++ : i--
-		) {
+			) {
 			if (dwSpec & (1 << i)) {
 				if (!bPost) { dwIncrement += 4; }
 				DFGNode oTarget = GetRegister(oBuilder, lpAddress, i);
@@ -718,7 +744,8 @@ _always:
 			bPost = true;
 			bIncrement = true;
 			bWriteback = true;
-		} else {
+		}
+		else {
 			dwRegisterNo = stInstruction.ops[0].reg;
 			dwSpec = stInstruction.ops[1].specval;
 			bPost = !!(stInstruction.auxpref & aux_postidx);
@@ -732,7 +759,7 @@ _always:
 			i = bIncrement ? 0 : 15;
 			(i < 16) && (i >= 0);
 			bIncrement ? i++ : i--
-		) {
+			) {
 			if (dwSpec & (1 << i)) {
 				if (!bPost) { dwIncrement += 4; }
 				DFGNode oLoad = oBuilder->NewLoad(oBuilder->NewAdd(oOperand, oBuilder->NewConstant(bIncrement ? dwIncrement : 0 - dwIncrement)));
@@ -769,7 +796,8 @@ _always:
 		if (stInstruction.ops[2].type == o_void) {
 			dwNode1RegisterNo = dwRegisterNo;
 			oNode2 = GetOperand(oBuilder, stInstruction.ops[1], lpAddress, bUpdateFlags);
-		} else {
+		}
+		else {
 			dwNode1RegisterNo = stInstruction.ops[1].reg;
 			oNode2 = GetOperand(oBuilder, stInstruction.ops[2], lpAddress, bUpdateFlags);
 		}
@@ -782,7 +810,7 @@ _always:
 		case ARM_and: oSource = oBuilder->NewAnd(oNode1, oNode2); eFlagOp = FLAG_OP_BITWISE_AND; break;
 		case ARM_orr: oSource = oBuilder->NewOr(oNode1, oNode2); eFlagOp = FLAG_OP_BITWISE_OR; break;
 		case ARM_eor: oSource = oBuilder->NewXor(oNode1, oNode2); eFlagOp = FLAG_OP_BITWISE_XOR; break;
-		case ARM_bic: 
+		case ARM_bic:
 			oNode2 = oBuilder->NewXor(oNode2, oBuilder->NewConstant(0xffffffff));
 			oSource = oBuilder->NewAnd(oNode1, oNode2);
 			eFlagOp = FLAG_OP_BITWISE_AND;
@@ -816,7 +844,8 @@ _always:
 		if (stInstruction.ops[2].type == o_void) {
 			dwNode1RegisterNo = dwRegisterNo;
 			oNode2 = GetOperand(oBuilder, stInstruction.ops[1], lpAddress, !!(stInstruction.auxpref & aux_cond));
-		} else {
+		}
+		else {
 			dwNode1RegisterNo = stInstruction.ops[1].reg;
 			oNode2 = GetOperand(oBuilder, stInstruction.ops[2], lpAddress, !!(stInstruction.auxpref & aux_cond));
 		}
@@ -870,8 +899,8 @@ _always:
 		//	((num >> 8)  &     0xff00) |
 		//	((num << 8)  &   0xff0000) |
 		//	((num << 24) & 0xff000000)
-		DFGNode oNodeRevByte0  = oBuilder->NewShift(oNode, oBuilder->NewConstant(-24));
-		DFGNode oNodeRevByte1  = oBuilder->NewAnd(oBuilder->NewShift(oNode, oBuilder->NewConstant(-8)), oBuilder->NewConstant(0xff00));
+		DFGNode oNodeRevByte0 = oBuilder->NewShift(oNode, oBuilder->NewConstant(-24));
+		DFGNode oNodeRevByte1 = oBuilder->NewAnd(oBuilder->NewShift(oNode, oBuilder->NewConstant(-8)), oBuilder->NewConstant(0xff00));
 		DFGNode oNodeRevByte2 = oBuilder->NewAnd(oBuilder->NewShift(oNode, oBuilder->NewConstant(8)), oBuilder->NewConstant(0xff0000));
 		DFGNode oNodeRevByte3 = oBuilder->NewAnd(oBuilder->NewShift(oNode, oBuilder->NewConstant(24)), oBuilder->NewConstant(0xff000000));
 		DFGNode oNodeRev = oBuilder->NewOr(oBuilder->NewOr(oBuilder->NewOr(oNodeRevByte0, oNodeRevByte1), oNodeRevByte2), oNodeRevByte3);
@@ -897,7 +926,7 @@ _always:
 		DFGNode oNode = GetOperand(oBuilder, stInstruction.ops[1], lpAddress, false);
 		oNode = oBuilder->NewShift(oNode, oBuilder->NewConstant(stInstruction.ops[2].value * -1));
 		oNode = oBuilder->NewAnd(oNode, oBuilder->NewConstant((1 << stInstruction.ops[3].value) - 1));
-		/* 
+		/*
 		 * We only sign extend here in case of a constant,
 		 * since we don't want to introduce a condition and potentially cause a fork
 		 */
@@ -930,7 +959,8 @@ _always:
 		eVerdict = oBuilder->IntroduceCondition(oCondition, lpAddress + dwInstructionSize);
 		if (eVerdict == GRAPH_PROCESS_SKIP) {
 			goto _skip;
-		} else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
+		}
+		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
 		break;
@@ -953,13 +983,13 @@ _skip:
 	return PROCESSOR_STATUS_OK;
 }
 
-bool ArmImpl::ShouldClean(DFGNode & oNode) {
+bool ArmImpl::ShouldClean(DFGNode& oNode) {
 	if (oNode == aRegisters[0]) {
 		/* node is return value -> keep */
 		return false;
 	}
 	if (NODE_IS_STORE(oNode)) {
-		/* 
+		/*
 		 * stores on the stack are temporary
 		 * and should be removed from the graph if their outputs remain unused
 		 */
@@ -967,7 +997,8 @@ bool ArmImpl::ShouldClean(DFGNode & oNode) {
 		if (NODE_IS_REGISTER(oMemoryAddress) && oMemoryAddress->toRegister()->bRegister == 13) {
 			/* store to SP */
 			return true;
-		} else if (NODE_IS_ADD(oMemoryAddress)) {
+		}
+		else if (NODE_IS_ADD(oMemoryAddress)) {
 			std::list<DFGNode>::iterator it;
 			/* store to SP+x */
 			for (it = oMemoryAddress->aInputNodes.begin(); it != oMemoryAddress->aInputNodes.end(); it++) {
@@ -1017,7 +1048,7 @@ Processor ArmImpl::Migrate(DFGraph oGraph) {
 	return Processor::typecast(lpFork);
 }
 
-DFGNode flag_op_t::Carry(CodeBroker &oBuilder) {
+DFGNode flag_op_t::Carry(CodeBroker& oBuilder) {
 	DFGNode oCarryNode(nullptr);
 	switch (eOperation) {
 	case FLAG_OP_ADD:
@@ -1030,7 +1061,7 @@ DFGNode flag_op_t::Carry(CodeBroker &oBuilder) {
 	return oCarryNode;
 }
 
-Condition flag_op_t::ConditionalInstruction(CodeBroker & oBuilder, char segpref) {
+Condition flag_op_t::ConditionalInstruction(CodeBroker& oBuilder, char segpref) {
 	switch (eOperation) {
 	case FLAG_OP_ADD:
 		return ConditionalInstructionAdd(oBuilder, segpref);
@@ -1044,7 +1075,7 @@ Condition flag_op_t::ConditionalInstruction(CodeBroker & oBuilder, char segpref)
 	}
 }
 
-Condition flag_op_t::ConditionalInstructionAdd(CodeBroker & oBuilder, char segpref) {
+Condition flag_op_t::ConditionalInstructionAdd(CodeBroker& oBuilder, char segpref) {
 	operator_t eOperator;
 	DFGNode oLeftNode, oRightNode;
 	switch (segpref) {
@@ -1094,7 +1125,7 @@ Condition flag_op_t::ConditionalInstructionAdd(CodeBroker & oBuilder, char segpr
 	);
 }
 
-Condition flag_op_t::ConditionalInstructionShift(CodeBroker & oBuilder, char segpref) {
+Condition flag_op_t::ConditionalInstructionShift(CodeBroker& oBuilder, char segpref) {
 	operator_t eOperator;
 	DFGNode oLeftNode, oRightNode, oCarryNode;
 	switch (segpref) {
@@ -1123,9 +1154,9 @@ Condition flag_op_t::ConditionalInstructionShift(CodeBroker & oBuilder, char seg
 	case cHI:
 	case cLS:
 		cHI,          // 1000 C & !Z                   Unsigned higher
-		cLS,          // 1001 !C | Z                   Unsigned lower or same
-		/* transform (C & !Z) to (C | ~Z) != 0 */
-		oLeftNode = oBuilder->NewShift(oNode1, oNode2, &oCarryNode);
+			cLS,          // 1001 !C | Z                   Unsigned lower or same
+			/* transform (C & !Z) to (C | ~Z) != 0 */
+			oLeftNode = oBuilder->NewShift(oNode1, oNode2, &oCarryNode);
 		oLeftNode = oBuilder->NewOr(
 			oBuilder->NewXor(oLeftNode, oBuilder->NewConstant(0xffffffff)), // ~Z
 			oCarryNode // C
@@ -1144,7 +1175,7 @@ Condition flag_op_t::ConditionalInstructionShift(CodeBroker & oBuilder, char seg
 	);
 }
 
-Condition flag_op_t::ConditionalInstructionBitwise(CodeBroker & oBuilder, char segpref) {
+Condition flag_op_t::ConditionalInstructionBitwise(CodeBroker& oBuilder, char segpref) {
 	operator_t eOperator;
 	DFGNode oLeftNode, oRightNode;
 
@@ -1173,7 +1204,7 @@ Condition flag_op_t::ConditionalInstructionBitwise(CodeBroker & oBuilder, char s
 	);
 }
 
-rfc_ptr<flag_op_t> flag_op_t::Migrate(DFGraph & oGraph) {
+rfc_ptr<flag_op_t> flag_op_t::Migrate(DFGraph& oGraph) {
 	rfc_ptr<flag_op_t> lpFork(rfc_ptr<flag_op_t>::create(*this));
 	lpFork->oNode1 = oGraph->FindNode(oNode1->dwNodeId);
 	lpFork->oNode2 = oGraph->FindNode(oNode2->dwNodeId);

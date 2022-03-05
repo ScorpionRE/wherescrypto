@@ -288,6 +288,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\study\whres7.5\src\SignatureParser.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\SlidingStackedWidget.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\ThreadPool.cpp" />
+    <ClInclude Include="todo.hpp" />
     <None Include="D:\study\whres7.5\src\Resource.qrc" />
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\EWIEGA46WW\qrc_Resource.cpp" />
   </ItemGroup>
