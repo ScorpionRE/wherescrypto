@@ -21,5 +21,5 @@ bool MicrocodeImpl::ShouldClean(DFGNode& oNode) {
 }
 
 Processor MicrocodeImpl::Migrate(DFGraph oGraph) {
-	return Processor::create();
+	return Processor::typecast(Microcode::create());
 }

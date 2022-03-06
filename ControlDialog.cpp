@@ -16,6 +16,7 @@
 #include "common.hpp"
 #include "types.hpp"
 #include "Arm.hpp"
+#include "hexrays_Microcode.hpp"
 #include "DFGraph.hpp"
 #include "Broker.hpp"
 #include "Predicate.hpp"

@@ -52,7 +52,7 @@ public:
 		lpOutput->ref();
 		return lpOutput;
 	}
-	inline ~rfc_ptr<T>() { if (lpNode) { lpNode->unref(); } }
+	inline ~rfc_ptr() { if (lpNode) { lpNode->unref(); } }
 
 	inline rfc_ptr<T>& operator=(const rfc_ptr<T>& lpOther) {
 		if (lpNode != lpOther.lpNode) {

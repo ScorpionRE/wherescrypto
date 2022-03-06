@@ -3,6 +3,7 @@
 #include <idp.hpp>
 #include <allins.hpp>
 #include <segregs.hpp>
+#include <hexrays.hpp>
 
 #include "common.hpp"
 #include "Arm.hpp"
