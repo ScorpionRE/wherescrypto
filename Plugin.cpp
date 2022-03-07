@@ -8,6 +8,7 @@
 
 #include "common.hpp"
 #include "Arm.hpp"
+#include "hexrays_Microcode.hpp"
 #include "Broker.hpp"
 #include "ThreadPool.hpp"
 #include "PathOracle.hpp"
@@ -17,6 +18,7 @@
 #include "ThreadPool.hpp"
 
 #include "ControlDialog.hpp"
+
 
 class DFGPlugin {
 public:
@@ -47,7 +49,10 @@ int DFGPlugin::DfgMenuCallback(void) {
 	return 0;
 }
 
+hexdsp_t* hexdsp = NULL;
+
 plugmod_t* idaapi init(void) {
+	
 	static dfgplugin_ah_t oMenuHandler(DFGPlugin::DfgMenuCallback);
 	static action_desc_t oMenuAction = {
 		/*.cb =*/ sizeof(struct action_desc_t),
@@ -65,6 +70,13 @@ plugmod_t* idaapi init(void) {
 	} else {
 		wc_debug("[-] Unable to register action '%s'", oMenuAction.name);
 	}
+
+	if (!init_hexrays_plugin())
+		return nullptr; // no decompiler
+	const char* hxver = get_hexrays_version();
+	wc_debug("Hex-rays version %s has been detected, %s ready to use\n",
+		hxver, PLUGIN.wanted_name);
+
 	return PLUGIN_KEEP;
 }
 

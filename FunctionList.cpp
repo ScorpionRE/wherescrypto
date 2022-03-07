@@ -80,6 +80,7 @@ FunctionList::FunctionList() {
 			lpSegment->start_ea > lpCurrentFunction->start_ea ||
 			lpSegment->end_ea <= lpCurrentFunction->start_ea) {
 
+			
 			lpSegment = getseg(lpCurrentFunction->start_ea);
 			if (lpSegment != NULL) {
 				get_segm_name(&szSegmentName, lpSegment);

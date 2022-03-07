@@ -3,9 +3,13 @@
 #include <vector>
 #include <list>
 #include <mutex>
+#include <hexrays.hpp>
 
 #include "types.hpp"
 #include "Processor.hpp"
+
+
+
 
 class MicrocodeImpl : public ProcessorImpl {
 public:
@@ -13,9 +17,11 @@ public:
 	inline ~MicrocodeImpl() { }
 
 	void initialize(CodeBroker& oBuilder);
-	//bool genMicrocode();
+	
 	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress);
 	bool ShouldClean(DFGNode& oNode);
+
+	bool genMicrocode();
 
 protected:
 	virtual Processor Migrate(DFGraph oGraph);

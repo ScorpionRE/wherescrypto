@@ -187,7 +187,7 @@ void SlidingStackedWidget::animationDoneSlot(void) {
     //widget(m_now)->update();
     //setCurrentIndex(m_next);  /* This function is inherit from QStackedWidget */
     m_active = false;
-    emit animationFinished();
+    qt_emit animationFinished();
 }
 
 /* REFERENCES:

@@ -98,7 +98,7 @@ void CoordinatorThread::run() {
 					if (oAnalysisResult->AllResultsSet()) {
 _all_results_set:
 						aResultTracker.erase(oEvaluationResult->oCodeGraph);
-						emit ResultReady(oAnalysisResult);
+						qt_emit ResultReady(oAnalysisResult);
 					}
 				}
 				break;
@@ -111,18 +111,18 @@ _all_results_set:
 	}
 
 	wc_debug("[+] Analysis finished. Total running time was %fs\n", (double)(GetTickCount() - dwStartTime) / 1000);
-	emit CoordinatorFinished();
+	qt_emit CoordinatorFinished();
 }
 
 bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 	std::list<unsigned long>::iterator itF = aFunctionList.begin();
 	if (itF != aFunctionList.end()) {
 		// Processor oProcessor(Processor::typecast(Arm::create()));
-		Processor oProcessor(Processor::typecast(Microcode::create()));
+		Processor oProcessor(Processor::typecast(Arm::create()));
 		bool bScheduled = CodeBrokerImpl::ScheduleBuild(oProcessor, oPool, *itF, nullptr, true);
 		if (bScheduled) {
 			aFunctionList.erase(itF);
-			emit NextFunction();
+			qt_emit NextFunction();
 		}
 		return bScheduled;
 	}
@@ -225,8 +225,8 @@ void ControlDialog::CoordinatorFinished() {
 void ControlDialog::StartAnalysis(bool bBatchRun) {
 	lpNextButton->setEnabled(false);
 	lpBatchButton->setEnabled(false);
-	lpMicrocodeButton->setEnabled(false); //点了的不可再点击
-	emit slideInIdx(1);
+	lpMicrocodeButton->setEnabled(false); 
+	qt_emit slideInIdx(1);
 
 	lpCoordinatorThread = new CoordinatorThread;
 
@@ -252,7 +252,7 @@ void ControlDialog::StartAnalysis(bool bBatchRun) {
 void ControlDialog::StartMicrocodeAnalysis(bool bBatchRun) {
 	lpNextButton->setEnabled(false);
 	lpBatchButton->setEnabled(false);
-	emit slideInIdx(1);
+	qt_emit slideInIdx(1);
 
 	lpCoordinatorThread = new CoordinatorThread;
 
