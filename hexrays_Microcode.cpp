@@ -9,9 +9,16 @@
 #include "hexrays_Microcode.hpp"
 #include "DFGraph.hpp"
 #include "Broker.hpp"
+#include "Condition.hpp"
 
 
 void MicrocodeImpl::initialize(CodeBroker& oBuilder) {}
+
+//register
+DFGNode MicrocodeImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned char bReg) {
+	
+	return aRegisters[bReg];
+}
 
 // 一条一条分析microcode指令
 processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress) {
@@ -31,7 +38,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	*lpNextAddress = lpAddress + dwInstructionSize;
 
 	DFGNode oConditionNode;
-	graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
+	// graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
 	Condition oCondition;
 	switch (stInstruction.segpref) { // mcode_t op操作码
 
@@ -121,7 +128,23 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		break;
 
-		case 
+	case m_ldx: {  
+		/*
+		* ldx  {l=sel,r=off}, d     // load register from memory  
+		* 1. register
+		* 2.
+		*/
+		// processor_status_t eStatus;
+		DFGNode oLoad;
+		DFGNode oReg = GetRegister(oBuilder, lpAddress, stInstruction.ops[1].reg);
+
+
+
+	}
+
+	case m_stx: {
+		DFGNode oData = GetRegister(oBuilder, lpAddress, stInstruction.ops[0].reg);  // 
+	}
 	}
 
 
@@ -176,4 +199,29 @@ bool MicrocodeImpl::genMicrocode() {
 Processor MicrocodeImpl::Migrate(DFGraph oGraph) {
 	genMicrocode();
 	return Processor::typecast(Microcode::create());
+}
+
+Condition flag_mop_t::ConditionalInstruction(CodeBroker& oBuilder, char segpref)
+{
+	return Condition();
+}
+
+Condition flag_mop_t::ConditionalInstructionAdd(CodeBroker& oBuilder, char segpref)
+{
+	return Condition();
+}
+
+Condition flag_mop_t::ConditionalInstructionShift(CodeBroker& oBuilder, char segpref)
+{
+	return Condition();
+}
+
+Condition flag_mop_t::ConditionalInstructionBitwise(CodeBroker& oBuilder, char segpref)
+{
+	return Condition();
+}
+
+rfc_ptr<flag_mop_t> flag_mop_t::Migrate(DFGraph& oGraph)
+{
+	return rfc_ptr<flag_mop_t>();
 }

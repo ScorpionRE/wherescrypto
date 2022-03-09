@@ -43,6 +43,12 @@ class MicrocodeImpl : public ProcessorImpl {
 public:
 	inline MicrocodeImpl() { }
 	inline ~MicrocodeImpl() { }
+	MicrocodeImpl(const MicrocodeImpl&) = default;
+
+	std::vector<DFGNode> aRegisters;
+	std::vector<unsigned long> aCallStack;
+
+	int dwMaxCallDepth;
 
 	void initialize(CodeBroker& oBuilder);
 	

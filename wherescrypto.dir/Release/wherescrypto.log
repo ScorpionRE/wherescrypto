@@ -1,10 +1,5 @@
 ﻿  Automatic MOC for target wherescrypto
   hexrays_Microcode.cpp
 D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-D:\study\whres7.5\src\ReferenceCount.hpp(59,1): error C2027: 使用了未定义类型“ConditionImpl”
-D:\study\whres7.5\src\types.hpp(16): message : 参见“ConditionImpl”的声明
-D:\study\whres7.5\src\ReferenceCount.hpp(57): message : 在编译 类 模板 成员函数“rfc_ptr<ConditionImpl> &rfc_ptr<ConditionImpl>::operator =(const rfc_ptr<ConditionImpl> &)”时
-D:\study\whres7.5\src\hexrays_Microcode.cpp(40): message : 查看对正在编译的函数 模板 实例化“rfc_ptr<ConditionImpl> &rfc_ptr<ConditionImpl>::operator =(const rfc_ptr<ConditionImpl> &)”的引用
-D:\study\whres7.5\src\hexrays_Microcode.cpp(35): message : 查看对正在编译的 类 模板 实例化“rfc_ptr<ConditionImpl>”的引用
-D:\study\whres7.5\src\ReferenceCount.hpp(61,1): error C2027: 使用了未定义类型“ConditionImpl”
-D:\study\whres7.5\src\types.hpp(16): message : 参见“ConditionImpl”的声明
+    正在创建库 D:/study/whres7.5/src/Release/wherescrypto.lib 和对象 D:/study/whres7.5/src/Release/wherescrypto.exp
+  wherescrypto.vcxproj -> D:\study\whres7.5\src\Release\wherescrypto.dll
