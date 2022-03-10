@@ -69,7 +69,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	*lpNextAddress = lpAddress + dwInstructionSize;
 
 	DFGNode oConditionNode;
-	// graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
+	graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
 	Condition oCondition;
 	switch (mInstruction.opcode) { // mcode_t op操作码
 
@@ -301,19 +301,100 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_shl: {
 		DFGNode oNode1, oNode2;
-		oNode2 = 
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction.l);
+		oNode2 = GetRegister(oBuilder, lpAddress, mInstruction.r);
+		processor_status_t eStatus;
+		DFGNode oSource;
+		oSource = oBuilder->NewShift(oNode1, oNode2);
+
+
+		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
+		eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNo, oSource);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;
 	}
 	case m_shr: {
-
+		//TODO: 右移
 
 	}
 	case m_sar: {
+		DFGNode oNode1, oNode2;
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction.l);
+		oNode2 = GetRegister(oBuilder, lpAddress, mInstruction.r);
+		processor_status_t eStatus;
+		DFGNode oSource;
+		oSource = oBuilder->NewRotate(oNode1, oNode2);
+
+
+		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
+		eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNo, oSource);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;
+	}
+	case m_xdu: {
 
 	}
+
+	case m_xds: {
+
+	}
+	case m_low: {
+
+	}
+	case m_high: {
+
+	}
+
+	case m_goto: {
+		DFGNode oAddress = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
+		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+	}
+	case m_call: {
+		DFGNode oAddress = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
+		// TODO: instruction size在microcode中
+		SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction.d , oBuilder->NewConstant(lpAddress + dwInstructionSize));
+		PushCallStack(lpAddress + dwInstructionSize);
+		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+
+	}
+	case m_icall: {
+
+	}
+	case m_ijmp: {
+
+	}
+	case m_ret: { //TODO: call 保存的返回值在哪
+		DFGNode oAddress = GetRegister(oBuilder, lpAddress, 14);
+		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+		break;
+	}
+	case m_jz:
+	case m_jnz: {
+		dwRegisterNo = mInstruction.l;
+		DFGNode oNode = GetRegister(oBuilder, lpAddress, dwRegisterNo);
+		Condition oCondition(Condition::create(oNode, mInstruction.opcode == m_jz ? OPERATOR_EQ : OPERATOR_NEQ, oBuilder->NewConstant(0)));
+		eVerdict = oBuilder->IntroduceCondition(oCondition, lpAddress + dwInstructionSize);
+		if (eVerdict == GRAPH_PROCESS_SKIP) {
+			goto _skip;
+		}
+		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
+			return PROCESSOR_STATUS_INTERNAL_ERROR;
+		}
+		break;
+	}
+	case m_nop: 
+		break;
+	default:
+		wc_debug("unhandled instruction type: %d at 0x%x", mInstruction.opcode, lpAddress);
+		return PROCESSOR_STATUS_INTERNAL_ERROR;
 	}
 
 
-
+_skip:
 	return PROCESSOR_STATUS_OK;
 }
  
