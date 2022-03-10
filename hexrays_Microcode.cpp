@@ -20,6 +20,35 @@ DFGNode MicrocodeImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstruc
 	return aRegisters[bReg];
 }
 
+processor_status_t MicrocodeImpl::SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, unsigned char bReg, DFGNode& oNode)
+{
+	return processor_status_t();
+}
+
+DFGNode MicrocodeImpl::GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, char bShiftType, bool bSetFlags)
+{
+
+	return DFGNode();
+}
+
+DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags)
+{
+	return DFGNode();
+}
+
+processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress)
+{
+	return processor_status_t();
+}
+
+void MicrocodeImpl::PushCallStack(unsigned long lpAddress)
+{
+}
+
+void MicrocodeImpl::PopCallStack(unsigned long lpAddress)
+{
+}
+
 // 一条一条分析microcode指令
 processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress) {
 	insn_t stInstruction;
@@ -31,6 +60,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	dwInstructionSize = decode_insn(&stInstruction, lpAddress);
 	API_UNLOCK();
 
+	minsn_t mInstruction = hx_mba_t_for_all_topinsns;  // microcode instruction
+
 	if (dwInstructionSize <= 0) {
 		return PROCESSOR_STATUS_INTERNAL_ERROR;
 	}
@@ -40,7 +71,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	DFGNode oConditionNode;
 	// graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
 	Condition oCondition;
-	switch (stInstruction.segpref) { // mcode_t op操作码
+	switch (mInstruction.opcode) { // mcode_t op操作码
 
 	case m_setz:  // 0x21 Z Equal 
 	case m_setnz: // 0x20 !Z Not equal
@@ -130,11 +161,12 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_ldx: {  
 		/*
-		* ldx  {l=sel,r=off}, d     // load register from memory  
+		* ldx  l=sel,r=off, d     // load register from memory  
 		* 1. register
-		* 2.
+		* 2. TODO: 
 		*/
 		// processor_status_t eStatus;
+		// for_all_topinsns();
 		DFGNode oLoad;
 		DFGNode oReg = GetRegister(oBuilder, lpAddress, stInstruction.ops[1].reg);
 
@@ -144,6 +176,139 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_stx: {
 		DFGNode oData = GetRegister(oBuilder, lpAddress, stInstruction.ops[0].reg);  // 
+	}
+			  
+	case m_mul: { // 0x0E mul l,r,d  l*r->d
+		DFGNode oNode1, oNode2;
+		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
+		oNode2 = GetOperand(oBuilder, mInstruction.r, lpAddress, false);
+		DFGNode oMult = oBuilder->NewMult(oNode1, oNode2);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction.d);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		// TODO: auxpref & aux_cond
+
+	}
+	case m_add: {
+		DFGNode oNode1, oNode2;
+		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
+		oNode2 = GetOperand(oBuilder, mInstruction.r, lpAddress, false);
+		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction.d, oAdd);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;
+
+	}
+	case m_sub: {
+		DFGNode oNode1, oNode2;
+		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
+		oNode2 = GetOperand(oBuilder, mInstruction.r, lpAddress, false);
+		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
+		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction.d, oAdd);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;
+
+	}
+	case m_cfadd: {
+		DFGNode oNode1, oNode2;
+		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
+		oNode2 = GetOperand(oBuilder, mInstruction.r, lpAddress, false);
+
+		if (oCarryFlag != nullptr) {
+			wc_debug("[-] instruction uses carry but carry not set @ 0x%x\n", lpAddress);
+			return PROCESSOR_STATUS_INTERNAL_ERROR;
+		}
+		DFGNode oCarryNode = oCarryFlag->Carry(oBuilder);
+		if (oCarryNode == nullptr) { //为nullpter???
+			wc_debug("[-] instruction uses carry but unable to construct a value for it @ 0x%x\n", lpAddress);
+			return PROCESSOR_STATUS_INTERNAL_ERROR;
+		}
+		oNode2 = oBuilder->NewAdd(oNode2, oCarryNode);
+		break;
+	}
+
+	case m_mov: {
+		DFGNode oNode = GetOperand(oBuilder, mInstruction.l, lpAddress, false);  //TODO: 立即数到register  (stInstruction.auxpref & aux_cond
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction.d  , oNode);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;
+	}
+
+	case m_neg: {
+		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction.l, lpAddress, false), oBuilder->NewConstant(-1));
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction.d, oNode);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;
+	}
+
+	case m_ldc: {
+
+	}
+
+	case m_push: {
+		ea_t dwSpec;
+		bool bPost;
+		bool bIncrement;
+		bool bWriteback;
+		int dwIncrement = 0;
+
+
+	}
+	case m_pop: {
+
+	}
+	case m_and: {
+		DFGNode oSource;
+		DFGNode oNode1, oNode2;
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction.l);
+		// oNode2 = GetOperand(oBuilder, lpAddress, mInstruction.r);  //GetReigister???
+		flag_mop_type_t eFlagOp;
+		oSource = oBuilder->NewAnd(oNode1, oNode2); 
+		eFlagOp = FLAG_MOP_BITWISE_AND; 
+		break;
+	}
+	case m_xor: {
+		DFGNode oSource;
+		DFGNode oNode1, oNode2;
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction.l);
+		// oNode2 = GetOperand(oBuilder, lpAddress, mInstruction.r);  //GetReigister???
+		flag_mop_type_t eFlagOp;
+		oSource = oBuilder->NewXor(oNode1, oNode2); 
+		eFlagOp = FLAG_MOP_BITWISE_XOR; 
+		break;
+	}
+
+	case m_or: {
+		DFGNode oSource;
+		DFGNode oNode1, oNode2;
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction.l);
+		// oNode2 = GetOperand(oBuilder, lpAddress, mInstruction.r);  //GetReigister???
+		flag_mop_type_t eFlagOp;
+		oSource = oBuilder->NewOr(oNode1, oNode2); 
+		eFlagOp = FLAG_MOP_BITWISE_OR; 
+		break;
+	}
+
+	case m_shl: {
+		DFGNode oNode1, oNode2;
+		oNode2 = 
+	}
+	case m_shr: {
+
+
+	}
+	case m_sar: {
+
 	}
 	}
 

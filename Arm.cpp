@@ -624,7 +624,7 @@ _always:
 		}
 		if (stInstruction.itype == ARM_cmp || stInstruction.itype == ARM_cmn || stInstruction.auxpref & aux_cond) {
 			SetFlag(FLAG_OP_ADD, oNode1, oNode2);
-		}
+		} // TODO:???? 
 		break;
 	}
 	case ARM_adr:

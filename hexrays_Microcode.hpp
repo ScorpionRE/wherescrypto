@@ -93,7 +93,7 @@ private:
 	DFGNode GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned char bReg);
 	processor_status_t SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, unsigned char bReg, DFGNode& oNode);
 	DFGNode GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, char bShiftType, bool bSetFlags);
-	DFGNode GetOperand(CodeBroker& oBuilder, const op_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags = false);
+	DFGNode GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags = false);
 	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress);
 	void PushCallStack(unsigned long lpAddress);
 	void PopCallStack(unsigned long lpAddress);
