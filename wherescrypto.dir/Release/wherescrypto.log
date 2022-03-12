@@ -1,43 +1,8 @@
 ﻿  Automatic MOC for target wherescrypto
   hexrays_Microcode.cpp
 D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-D:\study\whres7.5\src\hexrays_Microcode.cpp(186,94): error C2660: “MicrocodeImpl::SetRegister”: 函数不接受 4 个参数
-D:\study\whres7.5\src\hexrays_Microcode.cpp(23,35): message : 参见“MicrocodeImpl::SetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(198,100): error C2664: “processor_status_t MicrocodeImpl::SetRegister(CodeBroker &,unsigned long,unsigned long *,unsigned char,DFGNode &)”: 无法将参数 4 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(198,92): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(23,35): message : 参见“MicrocodeImpl::SetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(211,100): error C2664: “processor_status_t MicrocodeImpl::SetRegister(CodeBroker &,unsigned long,unsigned long *,unsigned char,DFGNode &)”: 无法将参数 4 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(211,92): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(23,35): message : 参见“MicrocodeImpl::SetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(238,102): error C2664: “processor_status_t MicrocodeImpl::SetRegister(CodeBroker &,unsigned long,unsigned long *,unsigned char,DFGNode &)”: 无法将参数 4 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(238,91): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(23,35): message : 参见“MicrocodeImpl::SetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(247,101): error C2664: “processor_status_t MicrocodeImpl::SetRegister(CodeBroker &,unsigned long,unsigned long *,unsigned char,DFGNode &)”: 无法将参数 4 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(247,92): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(23,35): message : 参见“MicrocodeImpl::SetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(273,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(273,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(283,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(283,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(294,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(294,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(304,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(304,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(305,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(305,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(324,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(324,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(325,59): error C2664: “DFGNode MicrocodeImpl::GetRegister(CodeBroker &,unsigned long,unsigned char)”: 无法将参数 3 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(325,57): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(18,24): message : 参见“MicrocodeImpl::GetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(359,119): error C2664: “processor_status_t MicrocodeImpl::SetRegister(CodeBroker &,unsigned long,unsigned long *,unsigned char,DFGNode &)”: 无法将参数 4 从“mop_t”转换为“unsigned char”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(359,62): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
-D:\study\whres7.5\src\hexrays_Microcode.cpp(23,35): message : 参见“MicrocodeImpl::SetRegister”的声明
-D:\study\whres7.5\src\hexrays_Microcode.cpp(375,32): error C2440: “=”: 无法从“mop_t”转换为“unsigned int”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(375,30): message : 没有可用于执行该转换的用户定义的转换运算符，或者无法调用该运算符
+D:\study\whres7.5\src\hexrays_Microcode.cpp(539): warning C4715: “flag_mop_t::ConditionalInstruction”: 不是所有的控件路径都返回值
+D:\study\whres7.5\src\hexrays_Microcode.cpp(100): warning C4700: 使用了未初始化的局部变量“dwInstructionSize”
+D:\study\whres7.5\src\hexrays_Microcode.cpp(347): warning C4700: 使用了未初始化的局部变量“dwRegisterNo”
+    正在创建库 D:/study/whres7.5/src/Release/wherescrypto.lib 和对象 D:/study/whres7.5/src/Release/wherescrypto.exp
+  wherescrypto.vcxproj -> D:\study\whres7.5\src\Release\wherescrypto.dll

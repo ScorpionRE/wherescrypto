@@ -27,10 +27,10 @@ public:
 		: oNode1(oNode1), oNode2(oNode2), eOperation(eOperation) { }
 
 	DFGNode Carry(CodeBroker& oBuilder);
-	Condition ConditionalInstruction(CodeBroker& oBuilder, char segpref);
-	Condition ConditionalInstructionAdd(CodeBroker& oBuilder, char segpref);
-	Condition ConditionalInstructionShift(CodeBroker& oBuilder, char segpref);
-	Condition ConditionalInstructionBitwise(CodeBroker& oBuilder, char segpref);
+	Condition ConditionalInstruction(CodeBroker& oBuilder, mcode_t opcode);
+	Condition ConditionalInstructionAdd(CodeBroker& oBuilder, mcode_t opcode);
+	Condition ConditionalInstructionShift(CodeBroker& oBuilder, mcode_t opcode);
+	Condition ConditionalInstructionBitwise(CodeBroker& oBuilder, mcode_t opcode);
 
 	rfc_ptr<flag_mop_t> Migrate(DFGraph& oGraph);
 
@@ -46,7 +46,7 @@ public:
 	MicrocodeImpl(const MicrocodeImpl&) = default;
 
 	std::vector<DFGNode> aRegisters;
-	std::vector<unsigned long> aCallStack;
+	std::list<unsigned long> aCallStack;
 
 	int dwMaxCallDepth;
 
@@ -90,9 +90,9 @@ private:
 			break;
 		}
 	}
-	DFGNode GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned char bReg);
-	processor_status_t SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, unsigned char bReg, DFGNode& oNode);
-	DFGNode GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, char bShiftType, bool bSetFlags);
+	DFGNode GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg);
+	processor_status_t SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, mreg_t bReg, DFGNode& oNode);
+	DFGNode GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, mcode_t opcode, bool bSetFlags);
 	DFGNode GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags = false);
 	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress);
 	void PushCallStack(unsigned long lpAddress);
