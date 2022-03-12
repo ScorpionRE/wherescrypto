@@ -11,9 +11,16 @@
 #include "Broker.hpp"
 #include "Condition.hpp"
 
-//没有必要初始化aRegisters
+// TODO: 没有必要初始化aRegisters, 大小如何决定？???
 void MicrocodeImpl::initialize(CodeBroker& oBuilder) {
-	
+	unsigned int i;
+	aRegisters.reserve(16);
+
+	for (i = 0; i < 16; i++) {
+		aRegisters.push_back(oBuilder->NewRegister(i));
+	}
+
+	dwMaxCallDepth = oBuilder->MaxCallDepth();
 }
 
 // microcode应该没有PC寄存器
@@ -433,8 +440,31 @@ _skip:
 	return PROCESSOR_STATUS_OK;
 }
  
+// TODO:改进
 bool MicrocodeImpl::ShouldClean(DFGNode& oNode) {
-	return false;
+	if (NODE_IS_STORE(oNode)) {
+		/*
+		 * stores on the stack are temporary
+		 * and should be removed from the graph if their outputs remain unused
+		 */
+		DFGNode oMemoryAddress = *++oNode->aInputNodes.begin();
+		if (NODE_IS_REGISTER(oMemoryAddress) && oMemoryAddress->toRegister()->bRegister == 13) {
+			/* store to SP */
+			return true;
+		}
+		else if (NODE_IS_ADD(oMemoryAddress)) {
+			std::list<DFGNode>::iterator it;
+			/* store to SP+x */
+			for (it = oMemoryAddress->aInputNodes.begin(); it != oMemoryAddress->aInputNodes.end(); it++) {
+				if (NODE_IS_REGISTER(*it) && (*it)->toRegister()->bRegister == 13) {
+					return true;
+				}
+			}
+		}
+		/* any other store should be considered to be an output value */
+		return false;
+	}
+	return true;
 }
 
 
