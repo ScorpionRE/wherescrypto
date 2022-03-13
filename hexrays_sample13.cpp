@@ -10,6 +10,7 @@
 #include <hexrays.hpp>
 #include <frame.hpp>
 
+
  // Hex-Rays API pointer
 hexdsp_t* hexdsp = NULL;
 
@@ -24,26 +25,37 @@ struct plugin_ctx_t : public plugmod_t
     virtual bool idaapi run(size_t) override;
 };
 
+struct  top_visitor_t : public minsn_visitor_t
+{
+    int visit_minsn() {
+        minsn_t* ins = this->curins;
+
+    }
+};
+
+
 //--------------------------------------------------------------------------
 bool idaapi plugin_ctx_t::run(size_t)
 {
-    ea_t ea1, ea2;
-    if (!read_range_selection(NULL, &ea1, &ea2))
+    hexrays_failure_t hf;
+    mba_ranges_t mbr = mba_ranges_t();
+    func_t* fn = get_func(get_screen_ea());
+    if (fn == NULL)
     {
-        warning("Please select a range of addresses to analyze");
+        warning("Please position the cursor within a function");
         return true;
     }
-
+ 
+    ea_t ea1 = fn->start_ea;
+    ea_t ea2 = fn->end_ea;
+    hf = hexrays_failure_t();
+ 
     flags_t F = get_flags(ea1);
     if (!is_code(F))
     {
         warning("The selected range must start with an instruction");
         return true;
     }
-
-    // generate microcode
-    hexrays_failure_t hf;
-    mba_ranges_t mbr;
     mbr.ranges.push_back(range_t(ea1, ea2));
     mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS);
     if (mba == NULL)
@@ -53,9 +65,25 @@ bool idaapi plugin_ctx_t::run(size_t)
     }
 
     msg("Successfully generated microcode for %a..%a\n", ea1, ea2);
-    vd_printer_t vp;
-    mba->print(vp);
+    // vd_printer_t vp;
+    // mba->print(vp);
 
+    // basic blocks
+
+    int qty = mba->qty;
+    mblock_t *blocks = mba->blocks->nextb;
+    msg("%d basic blocks", qty);
+
+    
+        // instructions 
+        msg("No %d basic block", blocks->serial);
+        minsn_t* ins = blocks->head;
+       
+        msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
+         
+        
+    
+    
     // We must explicitly delete the microcode array
     delete mba;
     return true;

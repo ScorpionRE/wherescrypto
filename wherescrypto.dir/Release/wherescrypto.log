@@ -1,3 +1,5 @@
 ﻿  Automatic MOC for target wherescrypto
+cl : 命令行 warning D9002: 忽略未知选项“/EXPORT:PLUGIN”
+  hexrays_sample13.cpp
     正在创建库 D:/study/whres7.5/src/Release/wherescrypto.lib 和对象 D:/study/whres7.5/src/Release/wherescrypto.exp
   wherescrypto.vcxproj -> D:\study\whres7.5\src\Release\wherescrypto.dll
