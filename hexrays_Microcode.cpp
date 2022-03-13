@@ -157,9 +157,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			goto _missing_flags;
 		}
 		break;
-	case m_setp: // 0x1F PF unordered/parity  TODO???
-
-
+	case m_setp: // 0x1F PF unordered/parity  TODO??? 
+	{
+		break;
+	}
 	case m_seta: // 0x24   !C & !Z  Above
 	case m_setbe: // 0x25  C | Z  Below or Equal
 		if (oCarryFlag == nullptr && oZeroFlag != nullptr) {
@@ -212,14 +213,18 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		DFGNode oLoad;
 		DFGNode oReg = GetRegister(oBuilder, lpAddress, mInstruction.l.r);
 
-
+		break;
 
 	}
 
 	case m_stx: {
 		DFGNode oData = GetRegister(oBuilder, lpAddress, mInstruction.l.r);  // 
+		break;
 	}
-			  
+
+
+	
+	case m_fmul:
 	case m_mul: { // 0x0E mul l,r,d  l*r->d
 		DFGNode oNode1, oNode2;
 		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
@@ -232,7 +237,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		// TODO: auxpref & aux_cond
 
 	}
-	case m_add: {
+	case m_add:
+	case m_fadd: {
 		DFGNode oNode1, oNode2;
 		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
 		oNode2 = GetOperand(oBuilder, mInstruction.r, lpAddress, false);
@@ -244,7 +250,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 
 	}
-	case m_sub: {
+	case m_sub: 
+	case m_fsub: {
 		DFGNode oNode1, oNode2;
 		oNode1 = GetOperand(oBuilder, mInstruction.l, lpAddress, false);
 		oNode2 = GetOperand(oBuilder, mInstruction.r, lpAddress, false);
@@ -275,6 +282,31 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 	}
 
+	case m_ofadd: {
+		break;
+	}
+	case m_cfshl: {
+		break;
+	}
+	case m_fdiv:
+	case m_udiv: {
+		break;
+	}
+	case m_sdiv: {
+		break;
+	}
+	case m_umod: {
+		break;
+	}
+	case m_smod: {
+		break;
+	}
+		
+
+	case m_ldc: {
+		break;
+	}
+
 	case m_mov: {
 		DFGNode oNode = GetOperand(oBuilder, mInstruction.l, lpAddress, false);  //TODO: Á¢¼´Êýµ½register  (stInstruction.auxpref & aux_cond
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction.d.r  , oNode);
@@ -283,7 +315,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		break;
 	}
-
+	case m_fneg:
 	case m_neg: {
 		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction.l, lpAddress, false), oBuilder->NewConstant(-1));
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction.d.r, oNode);
@@ -292,10 +324,14 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		break;
 	}
-
-	case m_ldc: {
-
+	case m_lnot: {
+		break;
 	}
+	case m_bnot: {
+		break;
+	}
+
+
 
 	case m_push: {
 		ea_t dwSpec;
@@ -303,11 +339,11 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		bool bIncrement;
 		bool bWriteback;
 		int dwIncrement = 0;
-
+		break;
 
 	}
 	case m_pop: {
-
+		break;
 	}
 	case m_and: {
 		DFGNode oSource;
@@ -378,17 +414,17 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 	}
 	case m_xdu: {
-
+		break;
 	}
 
 	case m_xds: {
-
+		break;
 	}
 	case m_low: {
-
+		break;
 	}
 	case m_high: {
-
+		break;
 	}
 
 	case m_goto: {
@@ -428,8 +464,62 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		break;
 	}
+
+	case m_jcnd: {
+		break;
+	}
+
+	case m_jae: {
+		break;
+	}
+	case m_jb: {
+		break;
+	}
+	case m_ja: {
+		break;
+	}
+	case m_jbe: {
+		break;
+	}
+	case m_jg: {
+		break;
+	}
+	case m_jge: {
+		break;
+	}
+	case m_jl: {
+		break;
+	}
+	case m_jle: {
+		break;
+	}
+	case m_jtbl: {
+
+	}
+
+	case m_f2f: {
+		break;
+	}
+	case m_f2i: {
+		break;
+	}
+	case m_i2f: {
+		break;
+	}
+	case m_f2u: {
+		break;
+	}
+	case m_u2f: {
+		break;
+	}
 	case m_nop: 
 		break;
+	case m_und: {
+		break;
+	}
+	case m_ext: {
+		break;
+	}
 	default:
 		wc_debug("unhandled instruction type: %d at 0x%x", mInstruction.opcode, lpAddress);
 		return PROCESSOR_STATUS_INTERNAL_ERROR;

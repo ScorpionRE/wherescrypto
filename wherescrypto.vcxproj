@@ -249,6 +249,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\mocs_compilation.cpp" />
+    <ClCompile Include="hexrays_sample13.cpp" />
     <ClInclude Include="D:\study\whres7.5\src\AnalysisResult.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\Arm.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\hexrays_Microcode.hpp" />
@@ -283,7 +284,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\study\whres7.5\src\DFGraph.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\FunctionList.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\PathOracle.cpp" />
-    <ClCompile Include="D:\study\whres7.5\src\Plugin.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\Predicate.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\SignatureEvaluator.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\SignatureParser.cpp" />

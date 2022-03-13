@@ -66,6 +66,8 @@ protected:
 	unsigned long Execute(void *lpPrivate) { return lpFunction(lpPrivate); }
 };
 
+
+
 class ThreadPoolImpl: virtual public ReferenceCounted {
 public:
 	ThreadPoolImpl(int dwNumThreads = 0);

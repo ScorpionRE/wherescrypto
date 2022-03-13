@@ -40,9 +40,6 @@
     <ClCompile Include="D:\study\whres7.5\src\PathOracle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\study\whres7.5\src\Plugin.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="D:\study\whres7.5\src\Predicate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,6 +57,9 @@
     </ClCompile>
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\EWIEGA46WW\qrc_Resource.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hexrays_sample13.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
