@@ -117,7 +117,9 @@ _all_results_set:
 bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 	std::list<unsigned long>::iterator itF = aFunctionList.begin();
 	if (itF != aFunctionList.end()) {
+		
 		// Processor oProcessor(Processor::typecast(Arm::create()));
+		
 		Processor oProcessor(Processor::typecast(Microcode::create()));
 		bool bScheduled = CodeBrokerImpl::ScheduleBuild(oProcessor, oPool, *itF, nullptr, true);
 		if (bScheduled) {

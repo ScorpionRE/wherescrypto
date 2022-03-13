@@ -100,7 +100,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	unsigned int dwRegisterNo;
 	int dwInstructionSize;
 	// TODO: 得到指令操作码
-	
+	GenMicrocode(lpAddress);
 
 	minsn_t mInstruction = hx_mba_t_for_all_topinsns;  // microcode instruction
 
@@ -468,27 +468,18 @@ bool MicrocodeImpl::ShouldClean(DFGNode& oNode) {
 }
 
 
-bool MicrocodeImpl::genMicrocode() {
+bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 	if (hexdsp != nullptr)
 		term_hexrays_plugin();
 
-	ea_t ea1, ea2;
-	if (!read_range_selection(NULL, &ea1, &ea2))
-	{
-		warning("Please select a range of addresses to analyze");
-		return true;
-	}
-
-	flags_t F = get_flags(ea1);
-	if (!is_code(F))
-	{
-		warning("The selected range must start with an instruction");
-		return true;
-	}
-
 	// generate microcode
 	hexrays_failure_t hf;
-	mba_ranges_t mbr;
+	mba_ranges_t mbr = mba_ranges_t();
+	func_t* fn = get_func(lpAddress);
+	ea_t ea1 = fn->start_ea;
+	ea_t ea2 = fn->end_ea;
+	hf = hexrays_failure_t();
+
 	mbr.ranges.push_back(range_t(ea1, ea2));
 	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS);
 	if (mba == NULL)
@@ -498,8 +489,8 @@ bool MicrocodeImpl::genMicrocode() {
 	}
 
 	wc_debug("Successfully generated microcode for %a..%a\n", ea1, ea2);
-	vd_printer_t vp;
-	mba->print(vp);
+	// vd_printer_t vp;
+	// mba->print(vp);
 
 	// We must explicitly delete the microcode array
 	delete mba;

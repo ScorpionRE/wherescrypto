@@ -55,9 +55,8 @@ public:
 	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress);
 	bool ShouldClean(DFGNode& oNode);
 
-	bool genMicrocode();
-
 protected:
+	bool GenMicrocode(unsigned long lpAddress);
 	virtual Processor Migrate(DFGraph oGraph);
 
 private:
