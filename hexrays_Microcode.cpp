@@ -25,6 +25,7 @@ void MicrocodeImpl::initialize(CodeBroker& oBuilder) {
 
 // microcode应该没有PC寄存器
 // TODO: 某些寄存器如eax映射mreg_t为8-11如何处理？？？
+// 实际上只是假设，实际情况下microcode中mreg_t为一个int值
 DFGNode MicrocodeImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg) {
 	wc_debug("mreg number: %d\n", bReg);
 	return aRegisters[bReg];
@@ -55,10 +56,19 @@ DFGNode MicrocodeImpl::GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode,
 	return oBuilder->NewShift(oBaseNode, oShift);
 }
 
-// microcode没有必要？？？
+
 DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags)
 {
-
+	switch (stOperand.t) {
+	case mop_r: {
+		DFGNode oReg = GetRegister(oBuilder, lpInstructionAddress, stOperand.r);
+		if (bSetFlags) {
+			SetFlag(FLAG_MOP_ADD, oReg, oBuilder->NewConstant(0));
+		}
+		return oReg;
+	}
+			  case mop_
+	}
 	return DFGNode();
 }
 
@@ -167,11 +177,11 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			goto _missing_flags;
 		}
 		break;
-	case m_setp: // 0x1F PF unordered/parity  TODO??? 
+	case m_setp: // TODO:  0x1F PF unordered/parity  
 	{
 		break;
 	}
-	case m_seta: // 0x24   !C & !Z  Above
+	case m_seta:  // 0x24   !C & !Z  Above
 	case m_setbe: // 0x25  C | Z  Below or Equal
 		if (oCarryFlag == nullptr && oZeroFlag != nullptr) {
 			if (oCarryFlag == oZeroFlag) {
@@ -179,7 +189,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 				wc_debug("[-] flags used in conditional instruction originate from two different operations which is not supported @ 0x%x\n", lpAddress);
 				return PROCESSOR_STATUS_INTERNAL_ERROR;
 			}
-			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);  //为什么这样做？？？
+			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);  
 		}
 		else {
 			goto _missing_flags;
@@ -212,7 +222,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		break;
 
-	case m_ldx: {  
+	case m_ldx: 
+	case m_ijmp: {  
 		/*
 		* ldx  l=sel,r=off, d     // load register from memory  
 		* 1. register
@@ -220,6 +231,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		*/
 		// processor_status_t eStatus;
 		// for_all_topinsns();
+		processor_status_t eStatus;
 		DFGNode oLoad;
 		DFGNode oReg = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
 
