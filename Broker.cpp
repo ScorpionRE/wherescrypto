@@ -936,7 +936,7 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 			goto _analysis_error;
 		}
 		unsigned long lpNextAddress;
-		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpAddress);
+		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpAddress,nullptr);
 		if (eStatus == PROCESSOR_STATUS_OK) {
 			lpAddress = lpNextAddress;
 			continue;

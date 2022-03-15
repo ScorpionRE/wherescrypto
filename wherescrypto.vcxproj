@@ -72,6 +72,7 @@
       <DebugInformationFormat>
       </DebugInformationFormat>
       <AdditionalOptions>/EXPORT:PLUGIN %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;__NT__;QT_DLL;QT_GUI_LIB;QT_CORE_LIB;QT_THREAD_SUPPORT;QT_NAMESPACE=QT;CMAKE_INTDIR=\"Release\";wherescrypto_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -250,8 +251,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\mocs_compilation.cpp" />
     <ClCompile Include="Plugin.cpp" />
+    <ClInclude Include="Address.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\AnalysisResult.hpp" />
-    <ClInclude Include="D:\study\whres7.5\src\Arm.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\hexrays_Microcode.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\Backlog.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\BlockPermutationEvaluator.hpp" />
@@ -272,7 +273,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\study\whres7.5\src\SlidingStackedWidget.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\ThreadPool.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\types.hpp" />
-    <ClCompile Include="D:\study\whres7.5\src\Arm.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\hexrays_Microcode.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\Backlog.cpp" />
     <ClCompile Include="D:\study\whres7.5\src\BlockPermutationEvaluator.cpp" />

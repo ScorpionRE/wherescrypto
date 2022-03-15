@@ -4,9 +4,6 @@
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\mocs_compilation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\study\whres7.5\src\Arm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="D:\study\whres7.5\src\hexrays_Microcode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,9 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D:\study\whres7.5\src\AnalysisResult.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D:\study\whres7.5\src\Arm.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\study\whres7.5\src\hexrays_Microcode.hpp">
@@ -130,6 +124,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="todo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Address.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

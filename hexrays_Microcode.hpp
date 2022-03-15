@@ -7,6 +7,8 @@
 
 #include "types.hpp"
 #include "Processor.hpp"
+#include <optional>
+#include <optional>
 
 
 typedef enum {
@@ -47,17 +49,18 @@ public:
 
 	std::vector<DFGNode> aRegisters;
 	std::list<unsigned long> aCallStack;
-	func_t* currentFunc;  // 当前函数
+	std::optional<func_t*> currentFunc;  // 当前函数
 
 	int dwMaxCallDepth;
 
 	void initialize(CodeBroker& oBuilder);
 	
-	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress);
+	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress,minsn_t *mInstruction = nullptr);
 	bool ShouldClean(DFGNode& oNode);
+	bool GenMicrocode(unsigned long lpAddress);
 
 protected:
-	bool GenMicrocode(unsigned long lpAddress);
+	
 	virtual Processor Migrate(DFGraph oGraph);
 
 private:
