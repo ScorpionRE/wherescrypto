@@ -47,6 +47,7 @@ public:
 
 	std::vector<DFGNode> aRegisters;
 	std::list<unsigned long> aCallStack;
+	func_t* currentFunc;  // µ±Ç°º¯Êý
 
 	int dwMaxCallDepth;
 
@@ -64,6 +65,7 @@ private:
 	rfc_ptr<flag_mop_t> oOverflowFlag;
 	rfc_ptr<flag_mop_t> oZeroFlag;
 	rfc_ptr<flag_mop_t> oNegativeFlag;
+	
 
 	inline void SetFlag(flag_mop_type_t eOperation, DFGNode oNode1, DFGNode oNode2) {
 		rfc_ptr<flag_mop_t> oFlagObj(rfc_ptr<flag_mop_t>::create(oNode1, oNode2, eOperation));

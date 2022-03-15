@@ -249,7 +249,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\mocs_compilation.cpp" />
-    <ClCompile Include="hexrays_sample13.cpp" />
+    <ClCompile Include="Plugin.cpp" />
     <ClInclude Include="D:\study\whres7.5\src\AnalysisResult.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\Arm.hpp" />
     <ClInclude Include="D:\study\whres7.5\src\hexrays_Microcode.hpp" />

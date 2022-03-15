@@ -114,10 +114,73 @@ _all_results_set:
 	qt_emit CoordinatorFinished();
 }
 
+bool GenMicrocode(unsigned long lpAddress) {
+	if (hexdsp != nullptr)
+		term_hexrays_plugin();
+
+	// generate microcode
+	hexrays_failure_t hf;
+	mba_ranges_t mbr = mba_ranges_t();
+	func_t* fn = get_func(get_screen_ea());
+	if (fn == NULL)
+	{
+		warning("Please position the cursor within a function");
+		return true;
+	}
+
+	ea_t ea1 = fn->start_ea;
+	ea_t ea2 = fn->end_ea;
+	hf = hexrays_failure_t();
+
+	flags_t F = get_flags(ea1);
+	if (!is_code(F))
+	{
+		warning("The selected range must start with an instruction");
+		return true;
+	}
+	mbr.ranges.push_back(range_t(ea1, ea2));
+	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS);
+	if (mba == NULL)
+	{
+		warning("%a: %s", hf.errea, hf.desc().c_str());
+		return true;
+	}
+
+	msg("Successfully generated microcode for %a..%a\n", ea1, ea2);
+	// vd_printer_t vp;
+	// mba->print(vp);
+
+	// basic blocks
+
+	int qty = mba->qty;
+	mblock_t* blocks = mba->blocks->nextb;
+	msg("%d basic blocks", qty);
+
+
+	// instructions 
+	msg("No %d basic block", blocks->serial);
+	minsn_t* ins = blocks->head;
+
+	msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
+
+
+
+
+	// We must explicitly delete the microcode array
+	delete mba;
+	return true;
+
+}
+
+
 bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 	std::list<unsigned long>::iterator itF = aFunctionList.begin();
 	if (itF != aFunctionList.end()) {
 		
+		// 函数生成microcode
+		GenMicrocode(*itF);
+
+
 		// Processor oProcessor(Processor::typecast(Arm::create()));
 		
 		Processor oProcessor(Processor::typecast(Microcode::create()));
@@ -133,7 +196,7 @@ bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 }
 
 //如何进入run了ScheduleNextFunction？？？
-/*
+
 bool CoordinatorThread::ScheduleNextFunctionMicrocode(ThreadPool& oPool) {
 	std::list<unsigned long>::iterator itF = aFunctionList.begin();
 	if (itF != aFunctionList.end()) {
@@ -141,14 +204,14 @@ bool CoordinatorThread::ScheduleNextFunctionMicrocode(ThreadPool& oPool) {
 		bool bScheduled = CodeBrokerImpl::ScheduleBuild(oProcessor, oPool, *itF, nullptr, true);
 		if (bScheduled) {
 			aFunctionList.erase(itF);
-			emit NextFunction();
+			qt_emit NextFunction();
 		}
 		return bScheduled;
 	}
 	return false;
 
 }
-*/
+
 
 void ControlDialog::SetupFunctionSelector() {
 	lpFunctionList = new FunctionList();
