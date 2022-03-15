@@ -136,22 +136,6 @@ bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 
 }
 
-//如何进入run了ScheduleNextFunction？？？
-
-bool CoordinatorThread::ScheduleNextFunctionMicrocode(ThreadPool& oPool) {
-	std::list<unsigned long>::iterator itF = aFunctionList.begin();
-	if (itF != aFunctionList.end()) {
-		Processor oProcessor(Processor::typecast(Microcode::create()));
-		bool bScheduled = CodeBrokerImpl::ScheduleBuild(oProcessor, oPool, *itF, nullptr, true);
-		if (bScheduled) {
-			aFunctionList.erase(itF);
-			qt_emit NextFunction();
-		}
-		return bScheduled;
-	}
-	return false;
-
-}
 
 
 void ControlDialog::SetupFunctionSelector() {

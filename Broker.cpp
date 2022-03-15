@@ -935,10 +935,14 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 			wc_debug("[-] max construction time exceeded for function %s (%s)\n", szFunctionName.c_str(), oStatePredicate->expression(2).c_str());
 			goto _analysis_error;
 		}
-		unsigned long lpNextAddress;
-		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpAddress,nullptr);
+		unsigned long lpNextAddress;  // TODO:  to be deleted?
+
+		minsn_t* mNextInstruction = nullptr;
+		minsn_t* mInstruction = nullptr;
+		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpAddress, mInstruction, mNextInstruction);
 		if (eStatus == PROCESSOR_STATUS_OK) {
-			lpAddress = lpNextAddress;
+			// lpAddress = lpNextAddress;
+			mInstruction = mNextInstruction;
 			continue;
 		}
 		break;

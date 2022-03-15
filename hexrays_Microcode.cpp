@@ -93,23 +93,32 @@ void MicrocodeImpl::PopCallStack(unsigned long lpAddress)
 	}
 }
 
+// 判断是否有子指令，有则有则调用instruction继续分析，得到结果？？？
+
+
 // 一条一条分析microcode指令
-processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress, minsn_t* mInstruction) {
+processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress, minsn_t* mInstruction, minsn_t* mNextInstruction) {
 
 	unsigned int i;
 	unsigned int dwRegisterNo;
 	int dwInstructionSize;
+	mblock_t* currentBlock;
 	// TODO: 得到指令操作码
 
-	if (!currentFunc.has_value()) {
-		GenMicrocode(lpAddress);
+	if (!currentFuncMicrocode.has_value()) {
+		if (!GenMicrocode(lpAddress)) {
+			return PROCESSOR_STATUS_INTERNAL_ERROR;
+		}
+		currentBlock = currentFuncMicrocode.value()->blocks->nextb;
+		mInstruction = currentBlock->head;
 	}
-
 	
-    // microcode instruction
-
 	
-	*lpNextAddress = lpAddress + dwInstructionSize;
+	
+    // microcode instruction  TODO: 最后的指令处理
+	mNextInstruction = mInstruction->next;
+	
+	// *lpNextAddress = lpAddress + dwInstructionSize;
 
 	DFGNode oConditionNode;
 	graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
@@ -558,7 +567,6 @@ bool MicrocodeImpl::ShouldClean(DFGNode& oNode) {
 	return true;
 }
 
-
 bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 	if (hexdsp != nullptr)
 		term_hexrays_plugin();
@@ -569,13 +577,11 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 	func_t* fn = get_func(lpAddress);
 
 
-	currentFunc = fn;
-
 	if (fn == NULL)
 	{
-		warning("Please position the cursor within a function");
-		return true;
-	}
+		wc_debug("Please position the cursor within a function");
+		return false;
+	} 
 
 	ea_t ea1 = fn->start_ea;
 	ea_t ea2 = fn->end_ea;
@@ -584,16 +590,17 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 	flags_t F = get_flags(ea1);
 	if (!is_code(F))
 	{
-		warning("The selected range must start with an instruction");
-		return true;
+		wc_debug("The selected range must start with an instruction");
+		return false;
 	}
 	mbr.ranges.push_back(range_t(ea1, ea2));
 	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS);
 	if (mba == NULL)
 	{
-		warning("%a: %s", hf.errea, hf.desc().c_str());
-		return true;
+		wc_debug("%a: %s", hf.errea, hf.desc().c_str());
+		
 	}
+	currentFuncMicrocode = mba;
 
 	msg("Successfully generated microcode for %a..%a\n", ea1, ea2);
 	// vd_printer_t vp;
@@ -610,10 +617,11 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 	msg("No %d basic block", blocks->serial);
 	minsn_t* ins = blocks->head;
 
+	return ins;
 	msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
 
 
-
+	
 
 	// We must explicitly delete the microcode array
 	delete mba;
@@ -626,6 +634,8 @@ Processor MicrocodeImpl::Migrate(DFGraph oGraph) {
 
 	Microcode lpFork(Microcode::create(*this));
 	std::vector<DFGNode>::iterator it;
+
+
 
 	lpFork->aRegisters.clear();
 	lpFork->aRegisters.reserve(aRegisters.size());
