@@ -111,6 +111,25 @@ void MicrocodeImpl::PopCallStack(unsigned long lpAddress)
 	}
 }
 
+bool MicrocodeImpl::isSetConditional(minsn_t* mInstruction) {
+	switch (mInstruction->opcode)
+	{
+	case m_seta:
+	case m_setae:
+	case m_setb:
+	case m_setbe:
+	case m_setg:
+	case m_setge:
+	case m_setl:
+	case m_setle:
+	case m_setnz:
+	case m_setz:
+		return true;
+	default:
+		return false;
+	}
+}
+
 // 判断是否有子指令，有则有则调用instruction继续分析，得到结果？？？
 
 
@@ -235,14 +254,15 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		/*
 		* ldx  l=sel,r=off, d     // load register from memory  
 		* 1. register
-		* 2. TODO: 
+		* 2. TODO: 查看sel与off等操作数的type完善GetOperand处理
 		*/
-		// processor_status_t eStatus;
-		// for_all_topinsns();
+		
 		processor_status_t eStatus;
 		DFGNode oLoad;
 		DFGNode oReg = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
-
+		// 每一步取operand之前都得判断是否为子指令，子指令递归操作
+		DFGNode oRoff = GetRegister(oBuilder, lpAddress, mInstruction->r.r);
+		oReg = oBuilder->NewAdd(oReg, );
 		break;
 
 	}
@@ -264,8 +284,11 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
-		// TODO: auxpref & aux_cond
-
+		// TODO: 但是为什么setconditional时需要setflag？？
+		if (isSetConditional(mInstruction)) {
+			SetFlag(FLAG_MOP_MULT, oNode1, oNode2);
+		}
+		break;
 	}
 	case m_add:
 	case m_fadd: {
@@ -273,6 +296,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
 		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		// TODO: 传进去前是否都需要判断是否为子指令
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oAdd);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
@@ -294,21 +318,13 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 
 	}
-	case m_cfadd: {
+	case m_cfadd: {  // TODO: calculate carry flag
 		DFGNode oNode1, oNode2;
 		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
 		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 
-		if (oCarryFlag != nullptr) {
-			wc_debug("[-] instruction uses carry but carry not set @ 0x%x\n", lpAddress);
-			return PROCESSOR_STATUS_INTERNAL_ERROR;
-		}
-		DFGNode oCarryNode = oCarryFlag->Carry(oBuilder);
-		if (oCarryNode == nullptr) { //为nullpter???
-			wc_debug("[-] instruction uses carry but unable to construct a value for it @ 0x%x\n", lpAddress);
-			return PROCESSOR_STATUS_INTERNAL_ERROR;
-		}
-		oNode2 = oBuilder->NewAdd(oNode2, oCarryNode);
+		
+		
 		break;
 	}
 
@@ -319,10 +335,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 	}
 	case m_fdiv:
-	case m_udiv: {
+	case m_udiv: { // TODO: unsigned?
 		break;
 	}
-	case m_sdiv: {
+	case m_sdiv: { // signed?
 		break;
 	}
 	case m_umod: {
@@ -338,8 +354,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 
 	case m_mov: {
-		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, lpAddress, false);  //TODO: 立即数到register  (stInstruction.auxpref & aux_cond
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction->d.r  , oNode);
+		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction));  
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction->d.r , oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -347,17 +363,28 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 	case m_fneg:
 	case m_neg: {
-		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction->l, lpAddress, false), oBuilder->NewConstant(-1));
+		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(-1));
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
 		break;
 	}
-	case m_lnot: {
+	case m_lnot: { //逻辑非，与1作and？？
+		DFGNode oNode = oBuilder->NewAnd(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(1));
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
 		break;
+		
 	}
 	case m_bnot: {
+		DFGNode oNode = oBuilder->NewXor(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(0xffffffff));
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
 		break;
 	}
 

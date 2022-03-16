@@ -58,6 +58,7 @@ public:
 	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress,minsn_t *mInstruction = nullptr, minsn_t* mNextInstruction = nullptr);
 	bool ShouldClean(DFGNode& oNode);
 	bool GenMicrocode(unsigned long lpAddress);
+	bool isSetConditional(minsn_t* mInstruction);
 
 protected:
 	
