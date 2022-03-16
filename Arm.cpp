@@ -185,6 +185,7 @@ void ArmImpl::PopCallStack(unsigned long lpAddress) {
 
 // bReg: < number of register (::o_reg) (ua.hpp)
 DFGNode ArmImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned char bReg) {
+	
 	if (bReg == 15) {
 		API_LOCK();
 		sel_t t = get_sreg(lpInstructionAddress, 20);

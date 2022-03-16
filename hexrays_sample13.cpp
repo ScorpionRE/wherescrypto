@@ -34,6 +34,7 @@ struct  top_visitor_t : public minsn_visitor_t
 };
 
 
+
 //--------------------------------------------------------------------------
 bool idaapi plugin_ctx_t::run(size_t)
 {
@@ -57,7 +58,8 @@ bool idaapi plugin_ctx_t::run(size_t)
         return true;
     }
     mbr.ranges.push_back(range_t(ea1, ea2));
-    mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS);
+    
+    mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS,MMAT_PREOPTIMIZED);
     if (mba == NULL)
     {
         warning("%a: %s", hf.errea, hf.desc().c_str());
@@ -72,15 +74,23 @@ bool idaapi plugin_ctx_t::run(size_t)
 
     int qty = mba->qty;
     mblock_t *blocks = mba->blocks->nextb;
-    msg("%d basic blocks", qty);
+    msg("%d basic blocks\n", qty);
 
     
         // instructions 
-        msg("No %d basic block", blocks->serial);
-        minsn_t* ins = blocks->head;
+    msg("No.%d basic block\n", blocks->serial);
+    minsn_t* ins = blocks->head;
        
-        msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
-         
+    msg("instructs opcode:%x, l:%d.%d type:%d  , r:%d.%d  type: %d, d: %d.%d type:%d", ins->opcode, ins->l.r, ins->l.size,ins->l.t, ins->r.r, ins->r.size, ins->r.t, ins->d.r, ins->d.size, ins->d.t);
+    while (ins->next != blocks->tail && (ins->opcode != m_ldx || ins->opcode != m_stx)) {
+        msg("opcode:%d instruction:  l:mreg:%d,mopt_t:%d, r: mreg:%d mopt_t:%d, d:mreg:%d,mopt_t:%d\n", ins->opcode, ins->l.r, ins->l.t, ins->r.r, ins->r.t, ins->d.r, ins->d.t);
+        ins = ins->next;
+    }
+    if (ins->opcode == m_ldx || ins->opcode == m_stx) {
+        msg("m_ldx instruction:  l:mreg:%d,mopt_t:%d, r: mreg:%d mopt_t:%d, d:mreg:%d,mopt_t:%d\n", ins->l.r, ins->l.t, ins->r.r, ins->r.t, ins->d.r, ins->d.t);
+    }
+   
+    
         
     
     

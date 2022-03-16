@@ -55,7 +55,7 @@
     <ClCompile Include="D:\study\whres7.5\src\wherescrypto_autogen\EWIEGA46WW\qrc_Resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Plugin.cpp">
+    <ClCompile Include="hexrays_sample13.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

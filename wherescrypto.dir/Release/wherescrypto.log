@@ -1,9 +1,5 @@
 ﻿  Automatic MOC for target wherescrypto
 cl : 命令行 warning D9002: 忽略未知选项“/EXPORT:PLUGIN”
-  hexrays_Microcode.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-D:\study\whres7.5\src\hexrays_Microcode.cpp(693): warning C4715: “flag_mop_t::ConditionalInstruction”: 不是所有的控件路径都返回值
-D:\study\whres7.5\src\hexrays_Microcode.cpp(400): warning C4700: 使用了未初始化的局部变量“dwRegisterNo”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(447): warning C4700: 使用了未初始化的局部变量“dwInstructionSize”
+  hexrays_sample13.cpp
     正在创建库 D:/study/whres7.5/src/Release/wherescrypto.lib 和对象 D:/study/whres7.5/src/Release/wherescrypto.exp
   wherescrypto.vcxproj -> D:\study\whres7.5\src\Release\wherescrypto.dll
