@@ -67,7 +67,15 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 		}
 		return oReg;
 	}
-			  case mop_
+	case mop_a:  //TODO：？？？
+		// return oBuilder->NewConstant(stOperand.a);
+	case mop_n:
+		return oBuilder->NewConstant(stOperand.valnum);
+	case mop_z:
+		return nullptr;
+	default:
+		wc_debug("[-] unsupported operand type: %d\n", stOperand.t);
+		return nullptr;
 	}
 	return DFGNode();
 }
@@ -464,9 +472,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_icall: {
 
 	}
-	case m_ijmp: {
 
-	}
 	case m_ret: { //TODO: call 保存的返回值在哪
 		DFGNode oAddress = GetRegister(oBuilder, lpAddress, 14);
 		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
