@@ -11,12 +11,12 @@
 #include "Broker.hpp"
 #include "Condition.hpp"
 
-// TODO: 没有必要初始化aRegisters, 大小如何决定？??? 动态分配？
+// TODO: 动态分配？
 void MicrocodeImpl::initialize(CodeBroker& oBuilder) {
 	unsigned int i;
-	aRegisters.reserve(100);
+	aRegisters.reserve(1000);
 
-	for (i = 0; i < 100; i++) {
+	for (i = 0; i < 1000; i++) {
 		aRegisters.push_back(oBuilder->NewRegister(i));
 	}
 
@@ -31,7 +31,7 @@ DFGNode MicrocodeImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstruc
 	return aRegisters[bReg];
 }
 
-processor_status_t MicrocodeImpl::SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, mreg_t bReg, DFGNode& oNode)
+processor_status_t MicrocodeImpl::SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress,  mreg_t bReg, DFGNode& oNode)
 {
 	aRegisters[bReg] = oNode;
 	return PROCESSOR_STATUS_OK;
@@ -80,7 +80,7 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 	return DFGNode();
 }
 
-processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress)
+processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder,  unsigned long lpInstructionAddress, DFGNode oAddress)
 {
 	unsigned long lpTarget(0);
 
@@ -134,7 +134,7 @@ bool MicrocodeImpl::isSetConditional(minsn_t* mInstruction) {
 
 
 // 一条一条分析microcode指令
-processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress, minsn_t* mInstruction, minsn_t* mNextInstruction) {
+processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long *lpNextAddress, unsigned long lpAddress, minsn_t* mInstruction, minsn_t* mNextInstruction) {
 
 	unsigned int i;
 	unsigned int dwRegisterNo;
@@ -155,7 +155,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
     // microcode instruction  TODO: 最后的指令处理
 	mNextInstruction = mInstruction->next;
 	
-	// *lpNextAddress = lpAddress + dwInstructionSize;
+	*lpNextAddress = mNextInstruction->ea;
 
 	DFGNode oConditionNode;
 	graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
@@ -280,7 +280,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
 		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 		DFGNode oMult = oBuilder->NewMult(oNode1, oNode2);
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r,oMult);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,  mInstruction->d.r,oMult);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -297,7 +297,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
 		// TODO: 传进去前是否都需要判断是否为子指令
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oAdd);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oAdd);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -311,7 +311,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oAdd);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oAdd);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -355,7 +355,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_mov: {
 		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction));  
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction->d.r , oNode);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,mInstruction->d.r , oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -364,7 +364,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_fneg:
 	case m_neg: {
 		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(-1));
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -372,7 +372,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 	case m_lnot: { // TODO:逻辑非，与1作and？？
 		DFGNode oNode = oBuilder->NewAnd(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(1));
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,  mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -381,7 +381,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 	case m_bnot: {
 		DFGNode oNode = oBuilder->NewXor(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(0xffffffff));
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,  mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -458,7 +458,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
-		eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNo, oSource);
+		eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -478,7 +478,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
-		eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, dwRegisterNo, oSource);
+		eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -500,14 +500,14 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_goto: {
 		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+		return JumpToNode(oBuilder,  lpAddress, oAddress);
 	}
 	case m_call: {
 		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
 		// TODO: instruction size在microcode中
-		SetRegister(oBuilder, lpAddress, lpNextAddress,mInstruction->d.r , oBuilder->NewConstant(lpAddress + dwInstructionSize));
+		SetRegister(oBuilder, lpAddress, mInstruction->d.r , oBuilder->NewConstant(lpAddress + dwInstructionSize));
 		PushCallStack(lpAddress + dwInstructionSize);
-		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+		return JumpToNode(oBuilder,  lpAddress, oAddress);
 
 	}
 	case m_icall: {
@@ -516,7 +516,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_ret: { //TODO: call 保存的返回值在哪
 		DFGNode oAddress = GetRegister(oBuilder, lpAddress, 14);
-		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+		return JumpToNode(oBuilder,  lpAddress, oAddress);
 		break;
 	}
 	case m_jz:
@@ -652,7 +652,7 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 		return false;
 	}
 	mbr.ranges.push_back(range_t(ea1, ea2));
-	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_PREOPTIMIZED);
+	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_GENERATED);
 	if (mba == NULL)
 	{
 		wc_debug("%a: %s", hf.errea, hf.desc().c_str());

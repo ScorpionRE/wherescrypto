@@ -917,6 +917,8 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 	DWORD dwStartTime = GetTickCount();
 	unsigned int dwLastNumNodes = 0;
 	unsigned int dwNumIterationsWithoutProgress = 0;
+	minsn_t* mNextInstruction = nullptr;
+	minsn_t* mInstruction = nullptr;
 	for (;;) {
 		if (oGraph->size() > dwMaxGraphSize) {
 			wc_debug("[-] max graph size exceeded for function %s (%s) construction time=%fs\n", szFunctionName.c_str(), oStatePredicate->expression(2).c_str(), (GetTickCount() - dwStartTime));
@@ -935,13 +937,12 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 			wc_debug("[-] max construction time exceeded for function %s (%s)\n", szFunctionName.c_str(), oStatePredicate->expression(2).c_str());
 			goto _analysis_error;
 		}
-		unsigned long lpNextAddress;  // TODO:  to be deleted?
-
-		minsn_t* mNextInstruction = nullptr;
-		minsn_t* mInstruction = nullptr;
-		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpAddress, mInstruction, mNextInstruction);
+		unsigned long lpNextAddress;  
+		
+		lpCurrentAddress = lpAddress;
+		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpCurrentAddress, mInstruction, mNextInstruction);
 		if (eStatus == PROCESSOR_STATUS_OK) {
-			// lpAddress = lpNextAddress;
+			lpCurrentAddress = lpNextAddress;
 			mInstruction = mNextInstruction;
 			continue;
 		}

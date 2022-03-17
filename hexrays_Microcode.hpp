@@ -55,7 +55,7 @@ public:
 
 	void initialize(CodeBroker& oBuilder);
 	
-	processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress,minsn_t *mInstruction = nullptr, minsn_t* mNextInstruction = nullptr);
+	processor_status_t instruction(CodeBroker& oBuilder, unsigned long *lpNextAddress,  unsigned long lpAddress, minsn_t* mInstruction = nullptr, minsn_t* mNextInstruction = nullptr);
 	bool ShouldClean(DFGNode& oNode);
 	bool GenMicrocode(unsigned long lpAddress);
 	bool isSetConditional(minsn_t* mInstruction);
@@ -96,10 +96,10 @@ private:
 		}
 	}
 	DFGNode GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg);
-	processor_status_t SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, unsigned long* lpNextAddress, mreg_t bReg, DFGNode& oNode);
+	processor_status_t SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg, DFGNode& oNode);
 	DFGNode GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, mcode_t opcode, bool bSetFlags);
 	DFGNode GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags = false);
-	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress);
+	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long lpInstructionAddress, DFGNode oAddress);
 	void PushCallStack(unsigned long lpAddress);
 	void PopCallStack(unsigned long lpAddress);
 
