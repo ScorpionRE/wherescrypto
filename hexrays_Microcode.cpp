@@ -11,12 +11,12 @@
 #include "Broker.hpp"
 #include "Condition.hpp"
 
-// TODO: 没有必要初始化aRegisters, 大小如何决定？???
+// TODO: 没有必要初始化aRegisters, 大小如何决定？??? 动态分配？
 void MicrocodeImpl::initialize(CodeBroker& oBuilder) {
 	unsigned int i;
-	aRegisters.reserve(16);
+	aRegisters.reserve(100);
 
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < 100; i++) {
 		aRegisters.push_back(oBuilder->NewRegister(i));
 	}
 
@@ -627,8 +627,7 @@ bool MicrocodeImpl::ShouldClean(DFGNode& oNode) {
 }
 
 bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
-	if (hexdsp != nullptr)
-		term_hexrays_plugin();
+	
 
 	// generate microcode
 	hexrays_failure_t hf;
@@ -653,7 +652,7 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 		return false;
 	}
 	mbr.ranges.push_back(range_t(ea1, ea2));
-	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS);
+	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_PREOPTIMIZED);
 	if (mba == NULL)
 	{
 		wc_debug("%a: %s", hf.errea, hf.desc().c_str());
