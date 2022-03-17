@@ -27,12 +27,20 @@ void MicrocodeImpl::initialize(CodeBroker& oBuilder) {
 // TODO: 某些寄存器如eax映射mreg_t为8-11如何处理？？？
 // 实际上只是假设，实际情况下microcode中mreg_t为一个int值
 DFGNode MicrocodeImpl::GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg) {
-	wc_debug("mreg number: %d\n", bReg);
+	
+	if (bReg > 1000 || bReg < 0) {
+		wc_debug("unsupported regnumber: %d\n", bReg);
+		return nullptr;
+	}
 	return aRegisters[bReg];
 }
 
 processor_status_t MicrocodeImpl::SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress,  mreg_t bReg, DFGNode& oNode)
 {
+	if (bReg > 1000 || bReg < 0) {
+		wc_debug("unsupported regnumber: %d\n", bReg);
+		return PROCESSOR_STATUS_INTERNAL_ERROR;
+	}
 	aRegisters[bReg] = oNode;
 	return PROCESSOR_STATUS_OK;
 }
@@ -69,8 +77,9 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 	}
 	case mop_a:  //TODO：？？？
 		// return oBuilder->NewConstant(stOperand.a);
+
 	case mop_n:
-		return oBuilder->NewConstant(stOperand.valnum);
+		return oBuilder->NewConstant(stOperand.nnn->value);
 	case mop_z:
 		return nullptr;
 	default:
@@ -252,23 +261,35 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_ldx: 
 	case m_ijmp: {  
 		/*
-		* ldx  l=sel,r=off, d     // load register from memory  
+		* ldx  l=sel,r=off, d     // load value from memory  
 		* 1. register
 		* 2. TODO: 查看sel与off等操作数的type完善GetOperand处理
 		*/
 		
 		processor_status_t eStatus;
 		DFGNode oLoad;
-		DFGNode oReg = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
-		// 每一步取operand之前都得判断是否为子指令，子指令递归操作
-		DFGNode oRoff = GetRegister(oBuilder, lpAddress, mInstruction->r.r);
-		// oReg = oBuilder->NewAdd(oReg, );
+		DFGNode oReg = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+		DFGNode oOff = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oReg = oBuilder->NewAdd(oReg, oOff);
+		oLoad = oBuilder->NewLoad(oReg);
+		if ((eStatus = SetRegister(oBuilder, lpAddress, mInstruction->l.r, oReg)) != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
 		break;
 
 	}
 
 	case m_stx: {
-		DFGNode oData = GetRegister(oBuilder, lpAddress, mInstruction->l.r);  // 
+		DFGNode oData = GetOperand(oBuilder,  mInstruction->l , lpAddress, false ); 
+		processor_status_t eStatus;
+		DFGNode oReg = GetOperand(oBuilder, mInstruction->r , lpAddress, false); // 一般为ds,cs
+		DFGNode oOff = GetOperand(oBuilder, mInstruction->d, lpAddress, false);
+		oReg = oBuilder->NewAdd(oReg, oOff);
+		oBuilder->NewStore(oData, oReg);
+		if ((eStatus = SetRegister(oBuilder, lpAddress, mInstruction->r.r , oReg)) != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+
 		break;
 	}
 
@@ -352,9 +373,11 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_ldc: {
 		break;
 	}
-
+	
+	// 都应先GetOperand???
 	case m_mov: {
 		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction));  
+		
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,mInstruction->d.r , oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
