@@ -262,7 +262,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		DFGNode oReg = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
 		// 每一步取operand之前都得判断是否为子指令，子指令递归操作
 		DFGNode oRoff = GetRegister(oBuilder, lpAddress, mInstruction->r.r);
-		oReg = oBuilder->NewAdd(oReg, );
+		// oReg = oBuilder->NewAdd(oReg, );
 		break;
 
 	}
@@ -370,7 +370,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		break;
 	}
-	case m_lnot: { //逻辑非，与1作and？？
+	case m_lnot: { // TODO:逻辑非，与1作and？？
 		DFGNode oNode = oBuilder->NewAnd(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(1));
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, lpNextAddress, mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
@@ -390,33 +390,45 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 
-	case m_push: {
+	case m_push: { // TODO: push and pop???
 		ea_t dwSpec;
-		bool bPost;
-		bool bIncrement;
-		bool bWriteback;
+		bool bPost = false;
+		bool bIncrement = false;
+		bool bWriteback = true;
 		int dwIncrement = 0;
+
+		DFGNode oOperand = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
+
+		
+
+
+
 		break;
 
 	}
 	case m_pop: {
 		break;
 	}
-	case m_and: {
+	case m_and: { // TODO:逻辑可能有点问题，还是感觉都需要先判断操作数
 		DFGNode oSource;
 		DFGNode oNode1, oNode2;
-		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
-		// oNode2 = GetOperand(oBuilder, lpAddress, mInstruction->r);  //GetReigister???
+		bool bUpdateFlags = (isSetConditional(mInstruction));
+
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->d.r);
+		oNode2 = GetOperand(oBuilder, mInstruction->l, lpAddress,bUpdateFlags);  //GetReigister???
 		flag_mop_type_t eFlagOp;
 		oSource = oBuilder->NewAnd(oNode1, oNode2); 
 		eFlagOp = FLAG_MOP_BITWISE_AND; 
 		break;
 	}
+
 	case m_xor: {
 		DFGNode oSource;
 		DFGNode oNode1, oNode2;
-		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
-		// oNode2 = GetOperand(oBuilder, lpAddress, mInstruction->r);  //GetReigister???
+		bool bUpdateFlags = (isSetConditional(mInstruction));
+		
+		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->d.r);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, bUpdateFlags);  //GetReigister???
 		flag_mop_type_t eFlagOp;
 		oSource = oBuilder->NewXor(oNode1, oNode2); 
 		eFlagOp = FLAG_MOP_BITWISE_XOR; 
@@ -426,8 +438,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_or: {
 		DFGNode oSource;
 		DFGNode oNode1, oNode2;
+		bool bUpdateFlags = (isSetConditional(mInstruction));
 		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
-		// oNode2 = GetOperand(oBuilder, lpAddress, mInstruction->r);  //GetReigister???
+		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, bUpdateFlags);  //GetReigister???
+
 		flag_mop_type_t eFlagOp;
 		oSource = oBuilder->NewOr(oNode1, oNode2); 
 		eFlagOp = FLAG_MOP_BITWISE_OR; 
@@ -452,7 +466,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 	case m_shr: {
 		//TODO: 右移
-
+		break;
 	}
 	case m_sar: {
 		DFGNode oNode1, oNode2;
