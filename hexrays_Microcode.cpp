@@ -134,7 +134,7 @@ bool MicrocodeImpl::isSetConditional(minsn_t* mInstruction) {
 
 
 // 一条一条分析microcode指令
-processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long *lpNextAddress, unsigned long lpAddress, minsn_t* mInstruction, minsn_t* mNextInstruction) {
+processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned long *lpNextAddress, unsigned long lpAddress, minsn_t* mInstruction, minsn_t*& mNextInstruction) {
 
 	unsigned int i;
 	unsigned int dwRegisterNo;

@@ -917,7 +917,7 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 	DWORD dwStartTime = GetTickCount();
 	unsigned int dwLastNumNodes = 0;
 	unsigned int dwNumIterationsWithoutProgress = 0;
-	minsn_t* mNextInstruction = nullptr;
+	minsn_t* mNextInstruction;
 	minsn_t* mInstruction = nullptr;
 	for (;;) {
 		if (oGraph->size() > dwMaxGraphSize) {
@@ -935,12 +935,13 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 		dwLastNumNodes = oGraph->size();
 		if ((GetTickCount() - dwStartTime) > dwMaxConstructionTime) {
 			wc_debug("[-] max construction time exceeded for function %s (%s)\n", szFunctionName.c_str(), oStatePredicate->expression(2).c_str());
-			goto _analysis_error;
+			// goto _analysis_error;
 		}
 		unsigned long lpNextAddress;  
 		
+
 		lpCurrentAddress = lpAddress;
-		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpCurrentAddress, mInstruction, mNextInstruction);
+		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpCurrentAddress, mInstruction, *&mNextInstruction);
 		if (eStatus == PROCESSOR_STATUS_OK) {
 			lpCurrentAddress = lpNextAddress;
 			mInstruction = mNextInstruction;

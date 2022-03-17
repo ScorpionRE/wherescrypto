@@ -55,7 +55,7 @@ public:
 
 	void initialize(CodeBroker& oBuilder);
 	
-	processor_status_t instruction(CodeBroker& oBuilder, unsigned long *lpNextAddress,  unsigned long lpAddress, minsn_t* mInstruction = nullptr, minsn_t* mNextInstruction = nullptr);
+	processor_status_t instruction(CodeBroker& oBuilder, unsigned long *lpNextAddress,  unsigned long lpAddress, minsn_t* mInstruction , minsn_t*& mNextInstruction );
 	bool ShouldClean(DFGNode& oNode);
 	bool GenMicrocode(unsigned long lpAddress);
 	bool isSetConditional(minsn_t* mInstruction);
