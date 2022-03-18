@@ -172,14 +172,20 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	
 	
 	
-	
 	mNextInstruction = mInstruction->next;
-	if (mNextInstruction == currentBlock.value()->tail) {
-		// TODO: basic block 选择
-	}
-
-
 	
+	if (mInstruction == currentBlock.value()->tail) {
+		// TODO: basic block 选择
+		int nsucc = currentBlock.value()->nsucc();
+		for (int i = 0; i < nsucc; i++) {
+			mblock_t* nextBB = currentFuncMicrocode.value()->natural[currentBlock.value()->succ(i)];
+			if (nextBB->start == currentBlock.value()->end) {
+				mNextInstruction = nextBB->head;
+			
+			}
+		
+		}
+	}
 	*lpNextAddress = mNextInstruction->ea;
 
 	DFGNode oConditionNode;
@@ -217,8 +223,14 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_jcnd: {
 		DFGNode oL = GetOperand(oBuilder, mInstruction->l, lpAddress, true);
 		Condition oCondition(Condition::create(oL, OPERATOR_NEQ, oBuilder->NewConstant(0)));  //相当于不为0（即为真）则跳转
-		// eVerdict = oBuilder->IntroduceCondition(oCondition.)
-
+		eVerdict = oBuilder->IntroduceCondition(oCondition, *lpNextAddress);
+		if (eVerdict == GRAPH_PROCESS_SKIP) {
+			goto _skip;
+		}
+		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
+			return PROCESSOR_STATUS_INTERNAL_ERROR;
+		}
+		break;
 
 	}
 
@@ -227,7 +239,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		dwRegisterNo = mInstruction->l.r;
 		DFGNode oNode = GetRegister(oBuilder, lpAddress, dwRegisterNo);
 		Condition oCondition(Condition::create(oNode, mInstruction->opcode == m_jz ? OPERATOR_EQ : OPERATOR_NEQ, oBuilder->NewConstant(0)));
-		eVerdict = oBuilder->IntroduceCondition(oCondition, lpAddress + dwInstructionSize);
+		eVerdict = oBuilder->IntroduceCondition(oCondition, *lpNextAddress);
 		if (eVerdict == GRAPH_PROCESS_SKIP) {
 			goto _skip;
 		}

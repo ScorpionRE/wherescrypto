@@ -918,7 +918,7 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 	unsigned int dwLastNumNodes = 0;
 	unsigned int dwNumIterationsWithoutProgress = 0;
 	minsn_t* mNextInstruction;
-	minsn_t* mInstruction = nullptr;
+	minsn_t* mInstruction;
 	for (;;) {
 		if (oGraph->size() > dwMaxGraphSize) {
 			wc_debug("[-] max graph size exceeded for function %s (%s) construction time=%fs\n", szFunctionName.c_str(), oStatePredicate->expression(2).c_str(), (GetTickCount() - dwStartTime));
