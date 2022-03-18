@@ -156,30 +156,30 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
 		currentBlock = currentFuncMicrocode.value()->blocks->nextb;
-		mInstruction = currentBlock.value()->head;
+		mInstruction = currentBlock->head;
 	
 	}
 
 
-	if (!currentBlock.has_value() || mInstruction == nullptr) {
+	if (!currentBlock || mInstruction == nullptr) {
 		wc_debug("[-] NULL basic block\n");
 		return PROCESSOR_STATUS_OK;
 	}
 
 	
-	if (currentBlock.value()->type == BLT_STOP )
+	if (currentBlock->type == BLT_STOP )
 		return PROCESSOR_STATUS_DONE;
 	
 	
 	
 	mNextInstruction = mInstruction->next;
 	
-	if (mInstruction == currentBlock.value()->tail) {
+	if (mInstruction == currentBlock->tail) {
 		// TODO: basic block 选择
-		int nsucc = currentBlock.value()->nsucc();
+		int nsucc = currentBlock->nsucc();
 		for (int i = 0; i < nsucc; i++) {
-			mblock_t* nextBB = currentFuncMicrocode.value()->natural[currentBlock.value()->succ(i)];
-			if (nextBB->start == currentBlock.value()->end) {
+			mblock_t* nextBB = currentFuncMicrocode.value()->natural[currentBlock->succ(i)];
+			if (nextBB->start == currentBlock->end) {
 				mNextInstruction = nextBB->head;
 			
 			}
@@ -196,29 +196,32 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		// TODO: Flag的设定
 	case m_setz:  // 0x21 Z Equal 
 	case m_setnz: // 0x20 !Z Not equal
-	
-		/*DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+	{
+		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
 		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
-		SetFlag(FLAG_MOP_ADD, oNode1, oNode2); 
+		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
 		if (oNode1 == oNode2) {
 			processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oBuilder->NewConstant(0));
 			if (eStatus != PROCESSOR_STATUS_OK) {
 				return eStatus;
 			}
 		}
-		break;*/
+	_missing_flags:
+		wc_debug("[-] conditional instruction but flags are not set @ 0x%x\n", lpAddress);
+		return PROCESSOR_STATUS_INTERNAL_ERROR;
+		break;
+	}
 
-		if (oZeroFlag != nullptr) {
+		/*if (oZeroFlag != nullptr) {
 			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
 		}
 		else {
-		_missing_flags:
-			wc_debug("[-] conditional instruction but flags are not set @ 0x%x\n", lpAddress);
-			return PROCESSOR_STATUS_INTERNAL_ERROR;
-		}
-		break;
+		*/
+		
+		
+	
 		
 	case m_jcnd: {
 		DFGNode oL = GetOperand(oBuilder, mInstruction->l, lpAddress, true);
@@ -251,8 +254,9 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		
 
 	case m_setae: // 0x22  !C Above or Equal
-	case m_setb:  // 0x23  C  below
-		/*DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+	case m_setb:  // 0x23  C  below 
+	{
+		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
 		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
 		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
@@ -261,15 +265,16 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
-		break;*/
+		break;
+	}
 
-		if (oCarryFlag == nullptr) {
+		/*if (oCarryFlag == nullptr) {
 			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
 		}
 		else {
 			goto _missing_flags;
 		}
-		break;
+		break;*/
 
 	case m_jae:
 	case m_jb:
@@ -293,13 +298,29 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 	case m_seto: // 0x1E   O  Overflow
-		if (oOverflowFlag != nullptr) {
+	{
+		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
+		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
+		if (oNode1 == oNode2) {
+			processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oBuilder->NewConstant(0));
+			if (eStatus != PROCESSOR_STATUS_OK) {
+				return eStatus;
+			}
+		}
+		break;
+	}
+
+
+		/*if (oOverflowFlag != nullptr) {
 			oCondition = oOverflowFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
 		}
 		else {
 			goto _missing_flags;
 		}
-		break;
+		break;*/
 	case m_setp: // TODO:  0x1F PF unordered/parity  
 	{
 		break;
@@ -714,13 +735,12 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 		return false;
 	}
 	mbr.ranges.push_back(range_t(ea1, ea2));
-	mba_t* mba = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_GENERATED);
-	if (mba == NULL)
+	currentFuncMicrocode = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_GENERATED);
+	if (currentFuncMicrocode.value() == NULL)
 	{
 		wc_debug("%a: %s", hf.errea, hf.desc().c_str());
 		
 	}
-	currentFuncMicrocode = mba;
 
 	msg("Successfully generated microcode for %a..%a\n", ea1, ea2);
 	// vd_printer_t vp;
@@ -741,10 +761,7 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 	//msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
 
 
-	
 
-	// We must explicitly delete the microcode array
-	delete mba;
 	return true;
 
 }
