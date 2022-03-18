@@ -148,21 +148,37 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	unsigned int i;
 	unsigned int dwRegisterNo;
 	int dwInstructionSize;
-	mblock_t* currentBlock;
-	// TODO: 得到指令操作码
+	
+	
 
 	if (!currentFuncMicrocode.has_value()) {
 		if (!GenMicrocode(lpAddress)) {
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
 		currentBlock = currentFuncMicrocode.value()->blocks->nextb;
-		mInstruction = currentBlock->head;
+		mInstruction = currentBlock.value()->head;
+	
 	}
+
+
+	if (!currentBlock.has_value() || mInstruction == nullptr) {
+		wc_debug("[-] NULL basic block\n");
+		return PROCESSOR_STATUS_OK;
+	}
+
+	
+	if (currentBlock.value()->type == BLT_STOP )
+		return PROCESSOR_STATUS_DONE;
 	
 	
 	
-    // microcode instruction  TODO: 最后的指令处理
+	
 	mNextInstruction = mInstruction->next;
+	if (mNextInstruction == currentBlock.value()->tail) {
+		// TODO: basic block 选择
+	}
+
+
 	
 	*lpNextAddress = mNextInstruction->ea;
 
@@ -171,8 +187,23 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	Condition oCondition;
 	switch (mInstruction->opcode) { // mcode_t op操作码
 
+		// TODO: Flag的设定
 	case m_setz:  // 0x21 Z Equal 
 	case m_setnz: // 0x20 !Z Not equal
+	
+		/*DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
+		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		SetFlag(FLAG_MOP_ADD, oNode1, oNode2); 
+		if (oNode1 == oNode2) {
+			processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oBuilder->NewConstant(0));
+			if (eStatus != PROCESSOR_STATUS_OK) {
+				return eStatus;
+			}
+		}
+		break;*/
+
 		if (oZeroFlag != nullptr) {
 			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
 		}
@@ -182,10 +213,54 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
 		break;
+		
+	case m_jcnd: {
+		DFGNode oL = GetOperand(oBuilder, mInstruction->l, lpAddress, true);
+		Condition oCondition(Condition::create(oL, OPERATOR_NEQ, oBuilder->NewConstant(0)));  //相当于不为0（即为真）则跳转
+		// eVerdict = oBuilder->IntroduceCondition(oCondition.)
 
+
+	}
+
+	case m_jz: 
+	case m_jnz: {
+		dwRegisterNo = mInstruction->l.r;
+		DFGNode oNode = GetRegister(oBuilder, lpAddress, dwRegisterNo);
+		Condition oCondition(Condition::create(oNode, mInstruction->opcode == m_jz ? OPERATOR_EQ : OPERATOR_NEQ, oBuilder->NewConstant(0)));
+		eVerdict = oBuilder->IntroduceCondition(oCondition, lpAddress + dwInstructionSize);
+		if (eVerdict == GRAPH_PROCESS_SKIP) {
+			goto _skip;
+		}
+		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
+			return PROCESSOR_STATUS_INTERNAL_ERROR;
+		}
+		break;
+	}
+		
 
 	case m_setae: // 0x22  !C Above or Equal
 	case m_setb:  // 0x23  C  below
+		/*DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
+		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
+		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oAdd);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		break;*/
+
+		if (oCarryFlag == nullptr) {
+			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
+		}
+		else {
+			goto _missing_flags;
+		}
+		break;
+
+	case m_jae:
+	case m_jb:
 		if (oCarryFlag == nullptr) {
 			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
 		}
@@ -259,12 +334,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 
 	case m_ldx: 
-	case m_ijmp: {  
-		/*
-		* ldx  l=sel,r=off, d     // load value from memory  
-		* 1. register
-		* 2. TODO: 查看sel与off等操作数的type完善GetOperand处理
-		*/
+	case m_ijmp: {  // TODO: ijmp
+		
 		
 		processor_status_t eStatus;
 		DFGNode oLoad;
@@ -482,6 +553,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
 		eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
+
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -542,52 +614,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		return JumpToNode(oBuilder,  lpAddress, oAddress);
 		break;
 	}
-	case m_jz:
-	case m_jnz: {
-		dwRegisterNo = mInstruction->l.r;
-		DFGNode oNode = GetRegister(oBuilder, lpAddress, dwRegisterNo);
-		Condition oCondition(Condition::create(oNode, mInstruction->opcode == m_jz ? OPERATOR_EQ : OPERATOR_NEQ, oBuilder->NewConstant(0)));
-		eVerdict = oBuilder->IntroduceCondition(oCondition, lpAddress + dwInstructionSize);
-		if (eVerdict == GRAPH_PROCESS_SKIP) {
-			goto _skip;
-		}
-		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
-			return PROCESSOR_STATUS_INTERNAL_ERROR;
-		}
-		break;
-	}
-
-	case m_jcnd: {
-		break;
-	}
-
-	case m_jae: {
-		break;
-	}
-	case m_jb: {
-		break;
-	}
-	case m_ja: {
-		break;
-	}
-	case m_jbe: {
-		break;
-	}
-	case m_jg: {
-		break;
-	}
-	case m_jge: {
-		break;
-	}
-	case m_jl: {
-		break;
-	}
-	case m_jle: {
-		break;
-	}
-	case m_jtbl: {
-
-	}
+	
 
 	case m_f2f: {
 		break;
@@ -689,17 +716,17 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 
 	// basic blocks
 
-	int qty = mba->qty;
-	mblock_t* blocks = mba->blocks->nextb;
-	msg("%d basic blocks", qty);
+	//int qty = mba->qty;
+	//mblock_t* blocks = mba->blocks->nextb;
+	//msg("%d basic blocks", qty);
 
 
-	// instructions 
-	msg("No %d basic block", blocks->serial);
-	minsn_t* ins = blocks->head;
+	//// instructions 
+	//msg("No %d basic block", blocks->serial);
+	//minsn_t* ins = blocks->head;
 
-	return ins;
-	msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
+	//return ins;
+	//msg("instructs opcode:%x, l:%d.%d  , r:%d.%d , d: %d.%d ", ins->opcode, ins->l.r, ins->l.size, ins->r.r, ins->r.size, ins->d.r, ins->d.size);
 
 
 	

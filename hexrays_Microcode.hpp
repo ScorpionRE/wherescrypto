@@ -49,7 +49,8 @@ public:
 
 	std::vector<DFGNode> aRegisters;
 	std::list<unsigned long> aCallStack;
-	std::optional<mba_t*> currentFuncMicrocode;  // 当前函数
+	std::optional<mba_t*> currentFuncMicrocode;  // 当前函数的microcode
+	std::optional<mblock_t*> currentBlock; // 当前basic block
 
 	int dwMaxCallDepth;
 

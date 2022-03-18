@@ -2,7 +2,7 @@
   Automatic MOC for target wherescrypto
   hexrays_Microcode.cpp
 D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-D:\study\whres7.5\src\hexrays_Microcode.cpp(774): warning C4715: “flag_mop_t::ConditionalInstruction”: 不是所有的控件路径都返回值
-D:\study\whres7.5\src\hexrays_Microcode.cpp(484): warning C4700: 使用了未初始化的局部变量“dwRegisterNo”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(531): warning C4700: 使用了未初始化的局部变量“dwInstructionSize”
+D:\study\whres7.5\src\hexrays_Microcode.cpp(801): warning C4715: “flag_mop_t::ConditionalInstruction”: 不是所有的控件路径都返回值
+D:\study\whres7.5\src\hexrays_Microcode.cpp(230): warning C4700: 使用了未初始化的局部变量“dwInstructionSize”
+D:\study\whres7.5\src\hexrays_Microcode.cpp(555): warning C4700: 使用了未初始化的局部变量“dwRegisterNo”
   wherescrypto.vcxproj -> D:\study\theis-bache\IDA7.5sp3\plugins\wherescrypto.dll
