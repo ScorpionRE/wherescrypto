@@ -293,7 +293,13 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
 		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
 		if (oNode1 == oNode2) {
-			processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oBuilder->NewConstant(0));
+			processor_status_t eStatus = SetOperand(oBuilder, mInstruction->d,lpAddress, oBuilder->NewConstant(0),false);
+			if (eStatus != PROCESSOR_STATUS_OK) {
+				return eStatus;
+			}
+		}
+		else {
+			processor_status_t eStatus = SetOperand(oBuilder,  mInstruction->d, lpAddress,oAdd,false);
 			if (eStatus != PROCESSOR_STATUS_OK) {
 				return eStatus;
 			}
@@ -326,10 +332,48 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 
 	case m_jz: 
-	case m_jnz: {
-		dwRegisterNo = mInstruction->l.r;
-		DFGNode oNode = GetRegister(oBuilder, lpAddress, dwRegisterNo);
-		Condition oCondition(Condition::create(oNode, mInstruction->opcode == m_jz ? OPERATOR_EQ : OPERATOR_NEQ, oBuilder->NewConstant(0)));
+	case m_jnz:
+	case m_jae:
+	case m_jb: 
+	case m_ja: 
+	case m_jbe:
+	case m_jg:
+	case m_jge:
+	case m_jl:
+	case m_jle: {
+		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
+		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
+		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
+		DFGNode oD = GetOperand(oBuilder, mInstruction->d, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		switch (mInstruction->opcode) {
+		case m_jz:
+		case m_jnz: {
+			Condition oCondition(Condition::create(oAdd, mInstruction->opcode == m_jz ? OPERATOR_EQ : OPERATOR_NEQ, oBuilder->NewConstant(0)));
+			break;
+		}
+		case m_jae:
+		case m_jb: {
+			Condition oCondition(Condition::create(oAdd, mInstruction->opcode == m_jae ? OPERATOR_UGE : OPERATOR_ULT, oBuilder->NewConstant(0)));
+			break;
+		}
+		case m_ja:
+		case m_jbe: {
+			Condition oCondition(Condition::create(oAdd, mInstruction->opcode == m_ja ? OPERATOR_UGT : OPERATOR_ULE, oBuilder->NewConstant(0)));
+			break;
+		}
+		case m_jge:
+		case m_jl: {
+			Condition oCondition(Condition::create(oAdd, mInstruction->opcode == m_jge ? OPERATOR_GE : OPERATOR_LT, oBuilder->NewConstant(0)));
+			break;
+		}
+		case m_jg:
+		case m_jle: {
+			Condition oCondition(Condition::create(oAdd, mInstruction->opcode == m_jg ? OPERATOR_GT : OPERATOR_LE, oBuilder->NewConstant(0)));
+			break;
+		}
+		}
 		eVerdict = oBuilder->IntroduceCondition(oCondition, *lpNextAddress);
 		if (eVerdict == GRAPH_PROCESS_SKIP) {
 			goto _skip;
@@ -337,93 +381,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
-
-		/*if (oZeroFlag != nullptr) {
-			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-		*/
-	/*_missing_flags:
-		wc_debug("[-] conditional instruction but flags are not set @ 0x%x\n", lpAddress);
-		return PROCESSOR_STATUS_INTERNAL_ERROR;
-		
-		break;*/
 	}
-		
-
-	
-
-		
-
-	case m_jae:
-	case m_jb:
-		if (oCarryFlag == nullptr) {
-			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-			// goto _missing_flags;
-		}
+	case m_jtbl:
 		break;
-
-
 	
-		//if (oNegativeFlag != nullptr) {
-		//	oCondition = oNegativeFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		//}
-		//else {
-		//	goto _missing_flags;
-		//}
-		//break;
-
-
-	
-
-
-		/*if (oOverflowFlag != nullptr) {
-			oCondition = oOverflowFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-			goto _missing_flags;
-		}
-		break;*/
-	
-	
-		/*if (oCarryFlag == nullptr && oZeroFlag != nullptr) {
-			if (oCarryFlag == oZeroFlag) {
-			_flags_from_different_operations:
-				wc_debug("[-] flags used in conditional instruction originate from two different operations which is not supported @ 0x%x\n", lpAddress);
-				return PROCESSOR_STATUS_INTERNAL_ERROR;
-			}
-			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);  
-		}
-		else {
-			goto _missing_flags;
-		}
-		break;*/
-
-
-		/*if (oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
-			if (oNegativeFlag != oOverflowFlag) {
-				goto _flags_from_different_operations;
-			}
-			oCondition = oNegativeFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-			goto _missing_flags;
-		}
-		break;*/
-
-
-		/*if (oZeroFlag != nullptr && oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
-			if (oZeroFlag != oNegativeFlag || oZeroFlag != oOverflowFlag) {
-				goto _flags_from_different_operations;
-			}
-			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-			goto _missing_flags;
-		}
-		break;*/
 
 	case m_ldx: 
 	case m_ijmp: {  // TODO: ijmp
