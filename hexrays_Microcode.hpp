@@ -13,6 +13,7 @@
 
 typedef enum {
 	FLAG_MOP_UNSET = 0,
+	FLAG_MOP_NEG,
 	FLAG_MOP_ADD,
 	FLAG_MOP_SHIFT,
 	FLAG_MOP_MULT,
@@ -27,6 +28,8 @@ public:
 	inline flag_mop_t(const flag_mop_t&) = default;
 	inline flag_mop_t(DFGNode& oNode1, DFGNode& oNode2, flag_mop_type_t eOperation)
 		: oNode1(oNode1), oNode2(oNode2), eOperation(eOperation) { }
+	inline flag_mop_t(DFGNode& oNode1, flag_mop_type_t eOperation)
+		: oNode1(oNode1), eOperation(eOperation) {}
 
 	DFGNode Carry(CodeBroker& oBuilder);
 	Condition ConditionalInstruction(CodeBroker& oBuilder, mcode_t opcode);
@@ -51,6 +54,7 @@ public:
 	std::list<unsigned long> aCallStack;
 	std::optional<mba_t*> currentFuncMicrocode;  // 当前函数的microcode
 	mblock_t* currentBlock; // 当前basic block
+	minsn_t* mNextInstruction;
 
 	int dwMaxCallDepth;
 
@@ -96,10 +100,25 @@ private:
 			break;
 		}
 	}
+
+	inline void SetFlagN(flag_mop_type_t eOperation, DFGNode oNode1) {
+		rfc_ptr<flag_mop_t> oFlagObj(rfc_ptr<flag_mop_t>::create(oNode1,eOperation));
+
+		switch (eOperation)
+		{
+		case FLAG_MOP_NEG:
+			oNegativeFlag = oFlagObj;
+			break;
+		default:
+			break;
+		}
+	}
 	DFGNode GetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg);
 	processor_status_t SetRegister(CodeBroker& oBuilder, unsigned long lpInstructionAddress, mreg_t bReg, DFGNode& oNode);
 	DFGNode GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode, DFGNode& oShift, mcode_t opcode, bool bSetFlags);
-	DFGNode GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags = false);
+	processor_status_t SetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, DFGNode oNode, bool bSetFlags);
+	DFGNode GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long*& lpNextAddress, unsigned long lpInstructionAddress, bool bSetFlags, minsn_t*& mNextInstruction);
+
 	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long lpInstructionAddress, DFGNode oAddress);
 	void PushCallStack(unsigned long lpAddress);
 	void PopCallStack(unsigned long lpAddress);

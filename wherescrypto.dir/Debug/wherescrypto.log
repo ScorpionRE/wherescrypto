@@ -1,43 +1,14 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(505,5): warning MSB8004: Output 目录未以斜杠结尾。  此生成实例将添加斜杠，因为必须有这个斜杠才能正确计算 Output 目录。
   Automatic MOC for target wherescrypto
-  Automatic RCC for Resource.qrc
-  Building Custom Rule D:/study/whres7.5/src/CMakeLists.txt
-  mocs_compilation.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  Plugin.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
   hexrays_Microcode.cpp
 D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  Backlog.cpp
-  BlockPermutationEvaluator.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  Broker.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-D:\study\whres7.5\src\Broker.cpp(787,93): warning C4312: “类型强制转换”: 从“unsigned long”转换到更大的“void *”
-D:\study\whres7.5\src\Broker.cpp(789,66): warning C4312: “类型强制转换”: 从“unsigned long”转换到更大的“void *”
-D:\study\whres7.5\src\Broker.cpp(874,69): warning C4312: “类型强制转换”: 从“unsigned long”转换到更大的“void *”
-  Condition.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
+D:\study\whres7.5\src\hexrays_Microcode.cpp(606,109): warning C4305: “参数”: 从“flag_mop_type_t”到“bool”截断
+D:\study\whres7.5\src\hexrays_Microcode.cpp(626,110): warning C4305: “参数”: 从“flag_mop_type_t”到“bool”截断
+D:\study\whres7.5\src\hexrays_Microcode.cpp(647,109): warning C4305: “参数”: 从“flag_mop_type_t”到“bool”截断
   ControlDialog.cpp
 D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  DFGDisplay.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  DFGNode.cpp
-  DFGraph.cpp
-  FunctionList.cpp
-  PathOracle.cpp
-  Predicate.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  SignatureEvaluator.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  SignatureParser.cpp
-D:\study\whres7.5\src\Broker.hpp(132,41): warning C4311: “类型强制转换”: 从“void *”到“unsigned long”的指针截断
-  SlidingStackedWidget.cpp
-  ThreadPool.cpp
-  qrc_Resource.cpp
   正在生成代码...
-D:\study\whres7.5\src\hexrays_Microcode.cpp(809): warning C4715: “flag_mop_t::ConditionalInstruction”: 不是所有的控件路径都返回值
-D:\study\whres7.5\src\hexrays_Microcode.cpp(567): warning C4700: 使用了未初始化的局部变量“dwRegisterNo”
-D:\study\whres7.5\src\hexrays_Microcode.cpp(615): warning C4700: 使用了未初始化的局部变量“dwInstructionSize”
-    正在创建库 D:/study/whres7.5/src/Debug/wherescrypto.lib 和对象 D:/study/whres7.5/src/Debug/wherescrypto.exp
+D:\study\whres7.5\src\hexrays_Microcode.cpp(909): warning C4715: “flag_mop_t::ConditionalInstruction”: 不是所有的控件路径都返回值
+D:\study\whres7.5\src\hexrays_Microcode.cpp(669): warning C4700: 使用了未初始化的局部变量“eStatus”
+D:\study\whres7.5\src\hexrays_Microcode.cpp(688): warning C4700: 使用了未初始化的局部变量“dwRegisterNo”
   wherescrypto.vcxproj -> D:\study\theis-bache\IDA7.5sp3\plugins\wherescrypto.dll

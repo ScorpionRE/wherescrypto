@@ -54,13 +54,13 @@ int PathOracleImpl::MaxConsecutiveNoopInstructions() {
 }
 
 int PathOracleImpl::MaxConstructionTime() {
-	return 10000; // 10s
+	return 10000000000; // 10s
 }
 
 int PathOracleImpl::MaxConditions() {
-	return 1000;
+	return 1000000000;
 }
 
 int PathOracleImpl::MaxEvaluationTime() {
-	return 10000; // 10s
+	return 1000000000; // 10s
 }

@@ -64,8 +64,29 @@ DFGNode MicrocodeImpl::GetOperandShift(CodeBroker& oBuilder, DFGNode& oBaseNode,
 	return oBuilder->NewShift(oBaseNode, oShift);
 }
 
+processor_status_t MicrocodeImpl::SetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, DFGNode oNode, bool bSetFlags)
+{
+	processor_status_t eStatus;
+	switch (stOperand.t) {
+	case mop_r: {
+		eStatus = SetRegister(oBuilder, lpInstructionAddress, stOperand.r, oNode);
+		break;
+	}
+	case mop_d: {
+		eStatus = PROCESSOR_STATUS_OK;
+		break;
+	}
+	default: {
+		eStatus = PROCESSOR_STATUS_OK;
+		break;
+	}
+		
+	}
+	return eStatus;
 
-DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, bool bSetFlags)
+}
+
+DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long *&lpNextAddress, unsigned long lpInstructionAddress, bool bSetFlags, minsn_t *&mNextInstruction)
 {
 	switch (stOperand.t) {
 	case mop_r: {
@@ -80,11 +101,26 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 
 	case mop_n:
 		return oBuilder->NewConstant(stOperand.nnn->value);
+	case mop_v: {
+		*lpNextAddress = stOperand.g;
+		// 不一定在succ里面
+		int nsucc = currentBlock->serial;
+		for (int i = 0; i < currentFuncMicrocode.value()->qty ; i++) {
+			mblock_t* nextBB = currentFuncMicrocode.value()->natural[i];
+			if (nextBB->start == stOperand.g) {
+				mNextInstruction = nextBB->head;
+				*lpNextAddress = mNextInstruction->ea;
+				currentBlock = nextBB;
+				break;
+			}
+		}
+		break;
+	}
 	case mop_z:
-		return nullptr;
+		break;
 	default:
 		wc_debug("[-] unsupported operand type: %d\n", stOperand.t);
-		return nullptr;
+		break;
 	}
 	return DFGNode();
 }
@@ -133,6 +169,17 @@ bool MicrocodeImpl::isSetConditional(minsn_t* mInstruction) {
 	case m_setle:
 	case m_setnz:
 	case m_setz:
+	case m_jz:
+	case m_jnz:
+	case m_ja:
+	case m_jae:
+	case m_jb:
+	case m_jbe:
+	case m_jg:
+	case m_jge:
+	case m_jl:
+	case m_jle:
+	case m_jcnd:
 		return true;
 	default:
 		return false;
@@ -151,7 +198,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	
 	
 
-	if (!currentFuncMicrocode.has_value()) {
+  	if (!currentFuncMicrocode.has_value()) {
 		if (!GenMicrocode(lpAddress)) {
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
@@ -162,43 +209,86 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 	if (!currentBlock || mInstruction == nullptr) {
-		wc_debug("[-] NULL basic block\n");
+		wc_debug("[-] NULL \n");
 		return PROCESSOR_STATUS_OK;
 	}
-
 	
-	if (currentBlock->type == BLT_STOP )
-		return PROCESSOR_STATUS_DONE;
-	
-	
-	
-	mNextInstruction = mInstruction->next;
+	if(mNextInstruction = mInstruction->next)
+		*lpNextAddress = mNextInstruction->ea;
 	
 	if (mInstruction == currentBlock->tail) {
 		// TODO: basic block 选择
-		int nsucc = currentBlock->nsucc();
-		for (int i = 0; i < nsucc; i++) {
-			mblock_t* nextBB = currentFuncMicrocode.value()->natural[currentBlock->succ(i)];
-			if (nextBB->start == currentBlock->end) {
-				mNextInstruction = nextBB->head;
-			
+		mblock_t* nextBB;
+		int nsucc;
+		switch (currentBlock->type)
+		{
+		case BLT_STOP:
+			return PROCESSOR_STATUS_DONE;
+		case BLT_0WAY:
+			return PROCESSOR_STATUS_OK;
+		case BLT_1WAY:
+			nextBB = currentBlock->nextb;
+			mNextInstruction = nextBB->head;
+			currentBlock = nextBB;
+			break;
+		case BLT_2WAY:
+			nsucc = currentBlock->nsucc();
+			for (int i = 0; i < nsucc; i++) {
+				nextBB = currentFuncMicrocode.value()->natural[currentBlock->succ(i)];
+				if (nextBB->start == currentBlock->end) {
+					mNextInstruction = nextBB->head;
+					*lpNextAddress = mNextInstruction->ea;
+					break;
+				}
 			}
-		
+			currentBlock = nextBB;
+			break;
+			
+		case BLT_NWAY: // TODO: switch idiom
+			nsucc = currentBlock->nsucc();
+			for (int i = 0; i < nsucc; i++) {
+				nextBB = currentFuncMicrocode.value()->natural[currentBlock->succ(i)];
+				if (nextBB->start == currentBlock->end) {
+					mNextInstruction = nextBB->head;
+					*lpNextAddress = mNextInstruction->ea;
+					break;
+				}
+			}
+			currentBlock = nextBB;
+			break;
+				
+		default:
+			nextBB = currentFuncMicrocode.value()->natural[currentBlock->serial + 1];
+			currentBlock = nextBB;
+			break;
 		}
+		if (nextBB->type == BLT_STOP)
+			return PROCESSOR_STATUS_DONE;
+			
+		
 	}
-	*lpNextAddress = mNextInstruction->ea;
+	
 
 	DFGNode oConditionNode;
 	graph_process_t eVerdict = GRAPH_PROCESS_CONTINUE;
 	Condition oCondition;
 	switch (mInstruction->opcode) { // mcode_t op操作码
 
-		// TODO: Flag的设定
+		
 	case m_setz:  // 0x21 Z Equal 
 	case m_setnz: // 0x20 !Z Not equal
+	case m_setae: // 0x22  !C Above or Equal
+	case m_setb:  // 0x23  C  below 
+	case m_seto:
+	case m_setg: // 0x26  SF=OF & ZF=0  Greater
+	case m_setle: // 0x29 SF!=OF | ZF=1 Less or Equal
+	case m_setge: // 0x27 SF=OF Greater or Equal
+	case m_setl:  // 0x28 SF!=OF less
+	case m_seta:  // 0x24   !C & !Z  Above
+	case m_setbe: // 0x25  C | Z  Below or Equal
 	{
-		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false,*&mNextInstruction);
+		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress,lpAddress, false, *&mNextInstruction);
 		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
 		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
@@ -208,24 +298,22 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 				return eStatus;
 			}
 		}
-	_missing_flags:
-		wc_debug("[-] conditional instruction but flags are not set @ 0x%x\n", lpAddress);
-		return PROCESSOR_STATUS_INTERNAL_ERROR;
 		break;
 	}
-
-		/*if (oZeroFlag != nullptr) {
-			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-		*/
-		
-		
+	case m_sets: {
+		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		SetFlagN(FLAG_MOP_NEG, oNode1);
+		break;
+	}
+	case m_setp:  // unordered 
+		break;
 	
 		
 	case m_jcnd: {
-		DFGNode oL = GetOperand(oBuilder, mInstruction->l, lpAddress, true);
+		DFGNode oL = GetOperand(oBuilder, mInstruction->l,*&lpNextAddress, lpAddress, true, *& mNextInstruction);
 		Condition oCondition(Condition::create(oL, OPERATOR_NEQ, oBuilder->NewConstant(0)));  //相当于不为0（即为真）则跳转
+		DFGNode oD = GetOperand(oBuilder, mInstruction->d, *&lpNextAddress, lpAddress, false, *& mNextInstruction);
+
 		eVerdict = oBuilder->IntroduceCondition(oCondition, *lpNextAddress);
 		if (eVerdict == GRAPH_PROCESS_SKIP) {
 			goto _skip;
@@ -249,32 +337,23 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		else if (eVerdict == GRAPH_PROCESS_INTERNAL_ERROR) {
 			return PROCESSOR_STATUS_INTERNAL_ERROR;
 		}
-		break;
+
+		/*if (oZeroFlag != nullptr) {
+			oCondition = oZeroFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
+		}
+		else {
+		*/
+	/*_missing_flags:
+		wc_debug("[-] conditional instruction but flags are not set @ 0x%x\n", lpAddress);
+		return PROCESSOR_STATUS_INTERNAL_ERROR;
+		
+		break;*/
 	}
 		
 
-	case m_setae: // 0x22  !C Above or Equal
-	case m_setb:  // 0x23  C  below 
-	{
-		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
-		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
-		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
-		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oAdd);
-		if (eStatus != PROCESSOR_STATUS_OK) {
-			return eStatus;
-		}
-		break;
-	}
+	
 
-		/*if (oCarryFlag == nullptr) {
-			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-			goto _missing_flags;
-		}
-		break;*/
+		
 
 	case m_jae:
 	case m_jb:
@@ -282,36 +361,22 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			oCondition = oCarryFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
 		}
 		else {
-			goto _missing_flags;
+			// goto _missing_flags;
 		}
 		break;
 
 
-	case m_sets: // 0x1D   N  Negative
-		if (oNegativeFlag != nullptr) {
-			oCondition = oNegativeFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
-		}
-		else {
-			goto _missing_flags;
-		}
-		break;
+	
+		//if (oNegativeFlag != nullptr) {
+		//	oCondition = oNegativeFlag->ConditionalInstruction(oBuilder, mInstruction->opcode);
+		//}
+		//else {
+		//	goto _missing_flags;
+		//}
+		//break;
 
 
-	case m_seto: // 0x1E   O  Overflow
-	{
-		DFGNode oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		DFGNode oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
-		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
-		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
-		SetFlag(FLAG_MOP_ADD, oNode1, oNode2);
-		if (oNode1 == oNode2) {
-			processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oBuilder->NewConstant(0));
-			if (eStatus != PROCESSOR_STATUS_OK) {
-				return eStatus;
-			}
-		}
-		break;
-	}
+	
 
 
 		/*if (oOverflowFlag != nullptr) {
@@ -321,13 +386,9 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			goto _missing_flags;
 		}
 		break;*/
-	case m_setp: // TODO:  0x1F PF unordered/parity  
-	{
-		break;
-	}
-	case m_seta:  // 0x24   !C & !Z  Above
-	case m_setbe: // 0x25  C | Z  Below or Equal
-		if (oCarryFlag == nullptr && oZeroFlag != nullptr) {
+	
+	
+		/*if (oCarryFlag == nullptr && oZeroFlag != nullptr) {
 			if (oCarryFlag == oZeroFlag) {
 			_flags_from_different_operations:
 				wc_debug("[-] flags used in conditional instruction originate from two different operations which is not supported @ 0x%x\n", lpAddress);
@@ -338,11 +399,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		else {
 			goto _missing_flags;
 		}
-		break;
+		break;*/
 
-	case m_setge: // 0x27 SF=OF Greater or Equal
-	case m_setl:  // 0x28 SF!=OF less
-		if (oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
+
+		/*if (oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
 			if (oNegativeFlag != oOverflowFlag) {
 				goto _flags_from_different_operations;
 			}
@@ -351,11 +411,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		else {
 			goto _missing_flags;
 		}
-		break;
+		break;*/
 
-	case m_setg: // 0x26  SF=OF & ZF=0  Greater
-	case m_setle: // 0x29 SF!=OF | ZF=1 Less or Equal
-		if (oZeroFlag != nullptr && oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
+
+		/*if (oZeroFlag != nullptr && oNegativeFlag != nullptr && oOverflowFlag != nullptr) {
 			if (oZeroFlag != oNegativeFlag || oZeroFlag != oOverflowFlag) {
 				goto _flags_from_different_operations;
 			}
@@ -364,7 +423,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		else {
 			goto _missing_flags;
 		}
-		break;
+		break;*/
 
 	case m_ldx: 
 	case m_ijmp: {  // TODO: ijmp
@@ -372,8 +431,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		
 		processor_status_t eStatus;
 		DFGNode oLoad;
-		DFGNode oReg = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		DFGNode oOff = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		DFGNode oReg = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress,lpAddress, false, *&mNextInstruction);
+		DFGNode oOff = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 		oReg = oBuilder->NewAdd(oReg, oOff);
 		oLoad = oBuilder->NewLoad(oReg);
 		if ((eStatus = SetRegister(oBuilder, lpAddress, mInstruction->l.r, oReg)) != PROCESSOR_STATUS_OK) {
@@ -384,10 +443,10 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 
 	case m_stx: {
-		DFGNode oData = GetOperand(oBuilder,  mInstruction->l , lpAddress, false ); 
+		DFGNode oData = GetOperand(oBuilder,  mInstruction->l , *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 		processor_status_t eStatus;
-		DFGNode oReg = GetOperand(oBuilder, mInstruction->r , lpAddress, false); // 一般为ds,cs
-		DFGNode oOff = GetOperand(oBuilder, mInstruction->d, lpAddress, false);
+		DFGNode oReg = GetOperand(oBuilder, mInstruction->r , *&lpNextAddress, lpAddress, false, *&mNextInstruction); // 一般为ds,cs
+		DFGNode oOff = GetOperand(oBuilder, mInstruction->d, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 		oReg = oBuilder->NewAdd(oReg, oOff);
 		oBuilder->NewStore(oData, oReg);
 		if ((eStatus = SetRegister(oBuilder, lpAddress, mInstruction->r.r , oReg)) != PROCESSOR_STATUS_OK) {
@@ -402,8 +461,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_fmul:
 	case m_mul: { // 0x0E mul l,r,d  l*r->d
 		DFGNode oNode1, oNode2;
-		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, * &mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 		DFGNode oMult = oBuilder->NewMult(oNode1, oNode2);
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,  mInstruction->d.r,oMult);
 		if (eStatus != PROCESSOR_STATUS_OK) {
@@ -418,8 +477,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_add:
 	case m_fadd: {
 		DFGNode oNode1, oNode2;
-		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
 		// TODO: 传进去前是否都需要判断是否为子指令
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oAdd);
@@ -432,8 +491,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_sub: 
 	case m_fsub: {
 		DFGNode oNode1, oNode2;
-		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress,lpAddress, false, *&mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 		oNode2 = oBuilder->NewMult(oNode2, oBuilder->NewConstant(-1));
 		DFGNode oAdd = oBuilder->NewAdd(oNode1, oNode2);
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oAdd);
@@ -445,8 +504,8 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 	case m_cfadd: {  // TODO: calculate carry flag
 		DFGNode oNode1, oNode2;
-		oNode1 = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, false);
+		oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
 
 		
 		
@@ -480,7 +539,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	
 	// 都应先GetOperand???
 	case m_mov: {
-		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction));  
+		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, !!isSetConditional(mInstruction), *&mNextInstruction);
 		
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,mInstruction->d.r , oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
@@ -490,7 +549,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 	case m_fneg:
 	case m_neg: {
-		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(-1));
+		DFGNode oNode = oBuilder->NewMult(GetOperand(oBuilder, mInstruction->l, *&lpNextAddress,lpAddress, !!isSetConditional(mInstruction), *&mNextInstruction), oBuilder->NewConstant(-1));
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress, mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
@@ -498,7 +557,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		break;
 	}
 	case m_lnot: { // TODO:逻辑非，与1作and？？
-		DFGNode oNode = oBuilder->NewAnd(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(1));
+		DFGNode oNode = oBuilder->NewAnd(GetOperand(oBuilder, mInstruction->l, *&lpNextAddress,lpAddress, !!isSetConditional(mInstruction), *&mNextInstruction), oBuilder->NewConstant(1));
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,  mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
@@ -507,7 +566,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		
 	}
 	case m_bnot: {
-		DFGNode oNode = oBuilder->NewXor(GetOperand(oBuilder, mInstruction->l, lpAddress, !!isSetConditional(mInstruction)), oBuilder->NewConstant(0xffffffff));
+		DFGNode oNode = oBuilder->NewXor(GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, !!isSetConditional(mInstruction), *&mNextInstruction), oBuilder->NewConstant(0xffffffff));
 		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,  mInstruction->d.r, oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
@@ -536,42 +595,62 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	case m_pop: {
 		break;
 	}
-	case m_and: { // TODO:逻辑可能有点问题，还是感觉都需要先判断操作数
+	case m_and: { 
 		DFGNode oSource;
 		DFGNode oNode1, oNode2;
-		bool bUpdateFlags = (isSetConditional(mInstruction));
+		bool bUpdateFlags = (isSetConditional(mNextInstruction));
 
-		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->d.r);
-		oNode2 = GetOperand(oBuilder, mInstruction->l, lpAddress,bUpdateFlags);  //GetReigister???
-		flag_mop_type_t eFlagOp;
+		oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, bUpdateFlags, *&mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress,lpAddress, bUpdateFlags, *&mNextInstruction);
 		oSource = oBuilder->NewAnd(oNode1, oNode2); 
-		eFlagOp = FLAG_MOP_BITWISE_AND; 
+		processor_status_t eStatus = SetOperand(oBuilder, mInstruction->d, lpAddress,oSource, FLAG_MOP_BITWISE_AND);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		if (bUpdateFlags) {
+			SetFlag(FLAG_MOP_BITWISE_AND, oNode1, oNode2);
+		}
 		break;
 	}
 
 	case m_xor: {
 		DFGNode oSource;
 		DFGNode oNode1, oNode2;
-		bool bUpdateFlags = (isSetConditional(mInstruction));
+		bool bUpdateFlags = (isSetConditional(mNextInstruction));
 		
-		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->d.r);
-		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, bUpdateFlags);  //GetReigister???
-		flag_mop_type_t eFlagOp;
+		oNode1 = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, bUpdateFlags, *&mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, bUpdateFlags, *&mNextInstruction);
+		
 		oSource = oBuilder->NewXor(oNode1, oNode2); 
-		eFlagOp = FLAG_MOP_BITWISE_XOR; 
+
+		processor_status_t eStatus = SetOperand(oBuilder, mInstruction->d, lpAddress, oSource, FLAG_MOP_BITWISE_XOR);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		if (bUpdateFlags) {
+			SetFlag(FLAG_MOP_BITWISE_XOR, oNode1, oNode2);
+		}
+
 		break;
 	}
 
 	case m_or: {
 		DFGNode oSource;
 		DFGNode oNode1, oNode2;
-		bool bUpdateFlags = (isSetConditional(mInstruction));
-		oNode1 = GetRegister(oBuilder, lpAddress, mInstruction->l.r);
-		oNode2 = GetOperand(oBuilder, mInstruction->r, lpAddress, bUpdateFlags);  //GetReigister???
+		bool bUpdateFlags = (isSetConditional(mNextInstruction));
+		oNode1 = GetOperand(oBuilder,  mInstruction->l, *&lpNextAddress,lpAddress, bUpdateFlags, *&mNextInstruction);
+		oNode2 = GetOperand(oBuilder, mInstruction->r, *&lpNextAddress, lpAddress, bUpdateFlags, *&mNextInstruction);
 
-		flag_mop_type_t eFlagOp;
 		oSource = oBuilder->NewOr(oNode1, oNode2); 
-		eFlagOp = FLAG_MOP_BITWISE_OR; 
+
+
+		processor_status_t eStatus = SetOperand(oBuilder, mInstruction->d, lpAddress, oSource, FLAG_MOP_BITWISE_OR);
+		if (eStatus != PROCESSOR_STATUS_OK) {
+			return eStatus;
+		}
+		if (bUpdateFlags) {
+			SetFlag(FLAG_MOP_BITWISE_OR, oNode1, oNode2);
+		}
 		break;
 	}
 
@@ -585,7 +664,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
-		eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
+		// eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
 
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
@@ -627,16 +706,16 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 
 	case m_goto: {
-		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
+		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress,lpAddress, false, *&mNextInstruction);
 		return JumpToNode(oBuilder,  lpAddress, oAddress);
 	}
 	case m_call: {
-		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, lpAddress, false);
-		// TODO: instruction size在microcode中
-		SetRegister(oBuilder, lpAddress, mInstruction->d.r , oBuilder->NewConstant(lpAddress + dwInstructionSize));
-		PushCallStack(lpAddress + dwInstructionSize);
-		return JumpToNode(oBuilder,  lpAddress, oAddress);
-
+		//DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
+		//// TODO: instruction size在microcode中
+		//SetRegister(oBuilder, lpAddress, mInstruction->d.r , oBuilder->NewConstant(lpAddress + dwInstructionSize));
+		//PushCallStack(lpAddress + dwInstructionSize);
+		//return JumpToNode(oBuilder,  lpAddress, oAddress);
+		break;
 	}
 	case m_icall: {
 
