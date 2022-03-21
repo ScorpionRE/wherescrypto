@@ -119,7 +119,8 @@ private:
 	processor_status_t SetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long lpInstructionAddress, DFGNode oNode, bool bSetFlags);
 	DFGNode GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, unsigned long*& lpNextAddress, unsigned long lpInstructionAddress, bool bSetFlags, minsn_t*& mNextInstruction);
 
-	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long lpInstructionAddress, DFGNode oAddress);
+	processor_status_t JumpToNode(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpInstructionAddress, DFGNode oAddress);
+
 	void PushCallStack(unsigned long lpAddress);
 	void PopCallStack(unsigned long lpAddress);
 
