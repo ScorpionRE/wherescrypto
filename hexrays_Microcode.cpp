@@ -103,10 +103,6 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 		return oBuilder->NewConstant(stOperand.nnn->value);
 	case mop_v: {
 		*lpNextAddress = stOperand.g;
-		if (stOperand.is_glbaddr()) {
-
-		}
-
 		int nsucc = currentBlock->serial;
 		for (int i = 0; i < currentFuncMicrocode.value()->qty ; i++) {
 			mblock_t* nextBB = currentFuncMicrocode.value()->natural[i];
@@ -114,9 +110,11 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 				mNextInstruction = nextBB->head;
 				*lpNextAddress = mNextInstruction->ea;
 				currentBlock = nextBB;
-				break;
+				return oBuilder->NewConstant(*lpNextAddress);
 			}
 		}
+
+		return oBuilder->NewConstant(*lpNextAddress);
 		break;
 	}
 	case mop_z:
@@ -134,6 +132,7 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 
 	if (NODE_IS_CONSTANT(oAddress)) {
 		lpTarget = oAddress->toConstant()->dwValue & ~1;
+		// lpTarget = oAddress->toConstant()->dwValue;
 	_jump:
 		API_LOCK();
 		segment_t* lpSegment = getseg(lpTarget);
@@ -143,7 +142,7 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 
 		PopCallStack(lpTarget);
 
-		if (lpSegment != NULL & szSegmentName != "extern" && aCallStack.size() < dwMaxCallDepth) {
+		if (lpSegment != NULL & szSegmentName != "extern" ) { //  && aCallStack.size() < dwMaxCallDepth
 			*lpNextAddress = lpTarget;
 		}
 		else {
@@ -307,6 +306,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		case BLT_1WAY:
 			nextBB = currentBlock->nextb;
 			mNextInstruction = nextBB->head;
+			*lpNextAddress = mNextInstruction->ea;
 			currentBlock = nextBB;
 			break;
 		case BLT_2WAY:
@@ -337,12 +337,14 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 				
 		default:
 			nextBB = currentFuncMicrocode.value()->natural[currentBlock->serial + 1];
-			currentBlock = nextBB;
+			
+			
 			break;
 		}
 		if (nextBB->type == BLT_STOP)
 			return PROCESSOR_STATUS_DONE;
-			
+		mNextInstruction = nextBB->head;
+		*lpNextAddress = mNextInstruction->ea;
 		
 	}
 	
