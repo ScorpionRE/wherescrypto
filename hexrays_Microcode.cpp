@@ -76,6 +76,11 @@ processor_status_t MicrocodeImpl::SetOperand(CodeBroker& oBuilder, const mop_t& 
 		eStatus = PROCESSOR_STATUS_OK;
 		break;
 	}
+	case mop_S: {
+		// member_t* stVar = stOperand.s->mba->find_stkvar(stOperand.s->off);
+		
+		
+	}
 	default: {
 		eStatus = PROCESSOR_STATUS_OK;
 		break;
@@ -96,11 +101,20 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 		}
 		return oReg;
 	}
+	case mop_d: {
+		mNextInstruction = stOperand.d;
+		break;
+	}
 	case mop_a:  //TODO：？？？
 		// return oBuilder->NewConstant(stOperand.a);
 
 	case mop_n:
 		return oBuilder->NewConstant(stOperand.nnn->value);
+	
+	case mop_S:
+		// member_t* stVar = stOperand.s->mba->get_stkvar(stOperand.s->off);
+		// return oBuilder->NewConstant(stVar);
+
 	case mop_v: {
 		*lpNextAddress = stOperand.g;
 		int nsucc = currentBlock->serial;
@@ -117,6 +131,12 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 		return oBuilder->NewConstant(*lpNextAddress);
 		break;
 	}
+	case mop_b:
+		currentBlock = currentFuncMicrocode.value()->natural[stOperand.b];
+		mNextInstruction = currentBlock->head;
+		*lpNextAddress = mNextInstruction->ea;
+		return oBuilder->NewConstant(*lpNextAddress);
+
 	case mop_z:
 		break;
 	default:
@@ -126,7 +146,7 @@ DFGNode MicrocodeImpl::GetOperand(CodeBroker& oBuilder, const mop_t& stOperand, 
 	return DFGNode();
 }
 
-processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long *lpNextAddress,  unsigned long lpInstructionAddress, DFGNode oAddress)
+processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long*& lpNextAddress,  unsigned long lpInstructionAddress, DFGNode oAddress)
 {
 	unsigned long lpTarget(0);
 
@@ -142,7 +162,7 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 
 		PopCallStack(lpTarget);
 
-		if (lpSegment != NULL & szSegmentName != "extern" ) { //  && aCallStack.size() < dwMaxCallDepth
+		if (lpSegment != NULL & szSegmentName != "extern" && aCallStack.size() < dwMaxCallDepth) { //  && aCallStack.size() < dwMaxCallDepth
 			*lpNextAddress = lpTarget;
 		}
 		else {
@@ -164,7 +184,12 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 			}
 			SetRegister(oBuilder, lpInstructionAddress, 7, oCallNode);
 			// TODO: 函数返回信息
-			DFGNode oLr = GetRegister(oBuilder, lpInstructionAddress, 14);
+
+			DFGNode oLr = oBuilder->NewConstant(*lpNextAddress);
+			*lpNextAddress = oLr->toConstant()->dwValue & ~1;
+			PopCallStack(*lpNextAddress);
+
+			/*DFGNode oLr = GetRegister(oBuilder, lpInstructionAddress, 14);
 			if (!NODE_IS_CONSTANT(oLr) && !(NODE_IS_REGISTER(oLr) && oLr->toRegister()->bRegister == 14)) {
 				wc_debug("[-] loading of non-constant expression %s into PC is not supported @ 0x%x\n", oLr->expression(2).c_str(), lpInstructionAddress);
 				return PROCESSOR_STATUS_INTERNAL_ERROR;
@@ -175,7 +200,7 @@ processor_status_t MicrocodeImpl::JumpToNode(CodeBroker& oBuilder, unsigned long
 			else {
 				*lpNextAddress = oLr->toConstant()->dwValue & ~1;
 				PopCallStack(*lpNextAddress);
-			}
+			}*/
 		}
 		return PROCESSOR_STATUS_OK;
 	}
@@ -272,7 +297,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	unsigned int i;
 	unsigned int dwRegisterNo;
 	int dwInstructionSize;
-	
+	udc_filter_t *udc;
 	
 
   	if (!currentFuncMicrocode.has_value()) {
@@ -281,7 +306,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 		}
 		currentBlock = currentFuncMicrocode.value()->blocks->nextb;
 		mInstruction = currentBlock->head;
-	
+		currentFuncMicrocode.value()->build_graph();
 	}
 
 
@@ -305,17 +330,12 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			return PROCESSOR_STATUS_OK;
 		case BLT_1WAY:
 			nextBB = currentBlock->nextb;
-			mNextInstruction = nextBB->head;
-			*lpNextAddress = mNextInstruction->ea;
-			currentBlock = nextBB;
 			break;
 		case BLT_2WAY:
 			nsucc = currentBlock->nsucc();
 			for (int i = 0; i < nsucc; i++) {
 				nextBB = currentFuncMicrocode.value()->natural[currentBlock->succ(i)];
 				if (nextBB->start == currentBlock->end) {
-					mNextInstruction = nextBB->head;
-					*lpNextAddress = mNextInstruction->ea;
 					break;
 				}
 			}
@@ -327,12 +347,9 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			for (int i = 0; i < nsucc; i++) {
 				nextBB = currentFuncMicrocode.value()->natural[currentBlock->succ(i)];
 				if (nextBB->start == currentBlock->end) {
-					mNextInstruction = nextBB->head;
-					*lpNextAddress = mNextInstruction->ea;
 					break;
 				}
 			}
-			currentBlock = nextBB;
 			break;
 				
 		default:
@@ -341,10 +358,13 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 			
 			break;
 		}
-		if (nextBB->type == BLT_STOP)
+		if (nextBB->type == BLT_STOP) {
+			currentFuncMicrocode.reset();
 			return PROCESSOR_STATUS_DONE;
+		}
 		mNextInstruction = nextBB->head;
 		*lpNextAddress = mNextInstruction->ea;
+		currentBlock = nextBB;
 		
 	}
 	
@@ -580,9 +600,9 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	
 	
 	case m_mov: {
-		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, !!isSetConditional(mInstruction), *&mNextInstruction);
-		
-		processor_status_t eStatus = SetRegister(oBuilder, lpAddress,mInstruction->d.r , oNode);
+		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, !!isSetConditional(mNextInstruction), *&mNextInstruction);
+		processor_status_t eStatus = SetOperand(oBuilder, mInstruction->d, lpAddress, oNode, isSetConditional(mNextInstruction));
+		// processor_status_t eStatus = SetRegister(oBuilder, lpAddress,mInstruction->d.r , oNode);
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
 		}
@@ -748,11 +768,11 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_goto: {
 		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress,lpAddress, false, *&mNextInstruction);
-		return JumpToNode(oBuilder,lpNextAddress,  lpAddress, oAddress);
+		return JumpToNode(oBuilder, *&lpNextAddress,  lpAddress, oAddress);
 	}
 	case m_call: {
 		DFGNode oAddress = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, false, *&mNextInstruction);
-		return JumpToNode(oBuilder,lpNextAddress,  lpAddress, oAddress);
+		return JumpToNode(oBuilder, *&lpNextAddress,  lpAddress, oAddress);
 	
 	}
 	case m_icall: {
@@ -761,7 +781,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 	case m_ret: { //TODO: call 保存的返回值在哪
 		DFGNode oAddress = GetRegister(oBuilder, lpAddress, 14);
-		return JumpToNode(oBuilder, lpNextAddress, lpAddress, oAddress);
+		return JumpToNode(oBuilder, *&lpNextAddress, lpAddress, oAddress);
 	}
 	
 
