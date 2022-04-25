@@ -124,7 +124,7 @@ bool CoordinatorThread::ScheduleNextFunction(ThreadPool &oPool) {
 
 		// Processor oProcessor(Processor::typecast(Arm::create()));
 
-		Processor oProcessor(Processor::typecast(Microcode::create()));
+		Processor oProcessor(Processor::typecast(Arm::create()));
 		bool bScheduled = CodeBrokerImpl::ScheduleBuild(oProcessor, oPool, *itF, nullptr, true);
 		if (bScheduled) {
 			aFunctionList.erase(itF);

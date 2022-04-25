@@ -941,7 +941,7 @@ void CodeBrokerImpl::Build_Impl(unsigned long lpAddress) {
 		
 
 		lpCurrentAddress = lpAddress;
-		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpCurrentAddress, mInstruction, *&mNextInstruction);
+		processor_status_t eStatus = oProcessor->instruction(CodeBroker::typecast(this), &lpNextAddress, lpCurrentAddress);
 		if (eStatus == PROCESSOR_STATUS_OK) {
 			lpCurrentAddress = lpNextAddress;
 			mInstruction = mNextInstruction;

@@ -15,7 +15,7 @@ public:
 	inline ~ProcessorImpl() { }
 
 	virtual void initialize(CodeBroker &oBuilder) = 0;
-	virtual processor_status_t instruction(CodeBroker &oBuilder, unsigned long *lpNextAddress,  unsigned long lpAddress, minsn_t *mInstrcution, minsn_t *&mNextInstruction) = 0;
+	virtual processor_status_t instruction(CodeBroker& oBuilder, unsigned long* lpNextAddress, unsigned long lpAddress) = 0;
 	virtual bool ShouldClean(DFGNode &oNode) = 0;
 protected:
 	virtual Processor Migrate(DFGraph oGraph) = 0;
