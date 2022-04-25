@@ -79,7 +79,7 @@ processor_status_t MicrocodeImpl::SetOperand(CodeBroker& oBuilder, const mop_t& 
 	case mop_S: {
 		// member_t* stVar = stOperand.s->mba->find_stkvar(stOperand.s->off);
 		
-		
+		eStatus = PROCESSOR_STATUS_OK;
 	}
 	default: {
 		eStatus = PROCESSOR_STATUS_OK;
@@ -594,11 +594,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 	}
 		
 
-	case m_ldc: {
-		break;
-	}
-	
-	
+	case m_ldc: 
 	case m_mov: {
 		DFGNode oNode = GetOperand(oBuilder, mInstruction->l, *&lpNextAddress, lpAddress, !!isSetConditional(mNextInstruction), *&mNextInstruction);
 		processor_status_t eStatus = SetOperand(oBuilder, mInstruction->d, lpAddress, oNode, isSetConditional(mNextInstruction));
@@ -725,7 +721,7 @@ processor_status_t MicrocodeImpl::instruction(CodeBroker& oBuilder, unsigned lon
 
 
 		SetFlag(FLAG_MOP_SHIFT, oNode1, oNode2);
-		// eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
+		eStatus = SetRegister(oBuilder, lpAddress,  dwRegisterNo, oSource);
 
 		if (eStatus != PROCESSOR_STATUS_OK) {
 			return eStatus;
@@ -871,7 +867,9 @@ bool MicrocodeImpl::GenMicrocode(unsigned long lpAddress) {
 		return false;
 	}
 	mbr.ranges.push_back(range_t(ea1, ea2));
-	currentFuncMicrocode = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_GENERATED);
+	API_LOCK();
+	currentFuncMicrocode = gen_microcode(mbr, &hf, NULL, DECOMP_WARNINGS, MMAT_CALLS);
+	API_UNLOCK();
 	if (currentFuncMicrocode.value() == NULL)
 	{
 		wc_debug("%a: %s", hf.errea, hf.desc().c_str());
